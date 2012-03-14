@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2011/07/15)
+ * jQuery spriteAnimator (revision 2012/03/14)
  * http://fili.nl
  * 
  * Copyright (c) Fili Wiese, ONI
@@ -222,17 +222,24 @@ window.requestAnimFrame = (function(){
 		
 		// Based on paul irish imagesLoaded plugin
 		var _isLoaded = function ( el, callback ) {
-			$(el).bind('load',function(){
-				callback.call(el,this);
+			var elems = $(el).filter('img'),
+			len   = elems.length,
+			blank = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+			elems.bind('load.imgloaded',function(){
+				if (--len <= 0 && this.src !== blank){ 
+					elems.unbind('load.imgloaded');
+					callback.call(elems,this); 
+				}
 			}).each(function(){
 				// cached images don't fire load sometimes, so we reset src.
 				if (this.complete || this.complete === undefined){
 					var src = this.src;
 					// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
 					// data uri bypasses webkit log warning (thx doug jones)
-					this.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+					this.src = blank;
 					this.src = src;
-				}
+				}  
 			});
 			return this;
 		};
@@ -263,5 +270,5 @@ window.requestAnimFrame = (function(){
 			$(this).data('spriteAnimator', plugin);
         });
     };
-
+	
 })(jQuery);
