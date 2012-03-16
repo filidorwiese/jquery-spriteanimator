@@ -215,7 +215,8 @@ window.requestAnimFrame = (function(){
 				plugin.globals.frameIterator = 0;
 				plugin.settings.run -= 1;
 				if (plugin.settings.run === 0) {
-					plugin.settings.play = false;
+					//plugin.settings.play = false;
+					plugin.stop();
 				}
 			}
         };
