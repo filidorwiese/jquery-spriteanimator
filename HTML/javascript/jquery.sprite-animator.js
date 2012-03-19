@@ -136,10 +136,28 @@ window.requestAnimFrame = (function(){
 					backgroundImage: 'url('+plugin.settings.url+')'
 				});
 				
-				if (plugin.settings.top !== null) { $element.css({top: plugin.settings.top}); }
+				if (plugin.settings.top !== null) {
+					if (plugin.settings.top == 'center') {
+						$element.css({top: '50%', marginTop: plugin.globals.frameHeight / 2 * -1});
+					} else {
+						$element.css({top: plugin.settings.top});
+					}
+				}
 				if (plugin.settings.bottom !== null) { $element.css({bottom: plugin.settings.bottom}); }
-				if (plugin.settings.left !== null) { $element.css({left: plugin.settings.left}); }
-				if (plugin.settings.right !== null) { $element.css({right: plugin.settings.right}); }
+				if (plugin.settings.left !== null) {
+					if (plugin.settings.left == 'center') {
+						$element.css({left: '50%', marginLeft: plugin.globals.frameWidth / 2 * -1});
+					} else {
+						$element.css({left: plugin.settings.left});
+					}
+				}
+				if (plugin.settings.right !== null) {
+					if (plugin.settings.right == 'center') {
+						$element.css({right: '50%', marginRight: plugin.globals.frameWidth / 2 * -1});
+					} else {
+						$element.css({right: plugin.settings.right});
+					}
+				}
 				
 				universe.log('Loaded: ' + plugin.settings.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
 				
