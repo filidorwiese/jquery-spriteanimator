@@ -66,7 +66,7 @@ window.requestAnimFrame = (function(){
         // element the plugin is attached to;
         plugin.settings = {};
 
-        var $element = $(element);//, element = element;
+        var $element = $(element);
 		
 		// constructor
         plugin.init = function() {
@@ -82,7 +82,6 @@ window.requestAnimFrame = (function(){
 		// destructor
 		plugin.destroy = function() {
 			$element.removeData('spriteAnimator');
-			$element.unbind();
 			$element = null;
 		};
 		
@@ -143,7 +142,12 @@ window.requestAnimFrame = (function(){
 						$element.css({top: plugin.settings.top});
 					}
 				}
-				if (plugin.settings.bottom !== null) { $element.css({bottom: plugin.settings.bottom}); }
+				if (plugin.settings.right !== null) {
+					$element.css({right: plugin.settings.right});
+				}
+				if (plugin.settings.bottom !== null) {
+					$element.css({bottom: plugin.settings.bottom});
+				}
 				if (plugin.settings.left !== null) {
 					if (plugin.settings.left == 'center') {
 						$element.css({left: '50%', marginLeft: plugin.globals.frameWidth / 2 * -1});
@@ -151,13 +155,10 @@ window.requestAnimFrame = (function(){
 						$element.css({left: plugin.settings.left});
 					}
 				}
-				if (plugin.settings.right !== null) {
-					if (plugin.settings.right == 'center') {
-						$element.css({right: '50%', marginRight: plugin.globals.frameWidth / 2 * -1});
-					} else {
-						$element.css({right: plugin.settings.right});
-					}
-				}
+				
+				$element.off('stop').on('stop', function(){
+					plugin.stop();
+				});
 				
 				universe.log('Loaded: ' + plugin.settings.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
 				
@@ -202,7 +203,7 @@ window.requestAnimFrame = (function(){
         
         plugin.stop = function() {
 			plugin.settings.play = false;
-			$element.triggerHandler('stop');
+			callback.call(); 
 		};
 		
         // private methods
@@ -233,22 +234,21 @@ window.requestAnimFrame = (function(){
 				plugin.globals.frameIterator = 0;
 				plugin.settings.run -= 1;
 				if (plugin.settings.run === 0) {
-					//plugin.settings.play = false;
 					plugin.stop();
 				}
 			}
         };
-		
+        
 		// Based on paul irish imagesLoaded plugin
-		var _isLoaded = function ( el, callback ) {
+		var _isLoaded = function ( el, _callback ) {
 			var elems = $(el).filter('img'),
 			len   = elems.length,
 			blank = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-
-			elems.bind('load.imgloaded',function(){
+			
+			elems.on('load.imgloaded', function(){
 				if (--len <= 0 && this.src !== blank){ 
-					elems.unbind('load.imgloaded');
-					callback.call(elems,this); 
+					elems.off('load.imgloaded');
+					_callback.call(elems,this); 
 				}
 			}).each(function(){
 				// cached images don't fire load sometimes, so we reset src.
@@ -260,6 +260,7 @@ window.requestAnimFrame = (function(){
 					this.src = src;
 				}  
 			});
+			
 			return this;
 		};
   
@@ -268,7 +269,7 @@ window.requestAnimFrame = (function(){
     };
 
     // add the plugin to the jQuery.fn object
-    $.fn.spriteAnimator = function(options) {
+    $.fn.spriteAnimator = function(options, callback) {
 		
         // iterate through the DOM elements we are attaching the plugin to
         return this.each(function() {
@@ -279,7 +280,7 @@ window.requestAnimFrame = (function(){
 			
 			// create a new instance of the plugin
 			// pass the DOM element and the user-provided options as arguments
-			var plugin = new $.spriteAnimator(this, options);
+			var plugin = new $.spriteAnimator(this, options, callback);
 			
 			// in the jQuery version of the element
 			// store a reference to the plugin object
