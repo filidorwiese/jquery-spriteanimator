@@ -1,28 +1,10 @@
 /*!
- * jQuery spriteAnimator (revision 2012/03/14)
+ * jQuery spriteAnimator (revision 2012/04/20)
  * http://fili.nl
  * 
  * Copyright (c) Fili Wiese, ONI
  * Licensed under LGPL 2.1 - http://www.gnu.org/licenses/lgpl-2.1.html
- * 
- * Includes;
- *   jQuery Plugin Boilerplate by Stefan Gabos
- *   http://stefangabos.ro/jquery/jquery-plugin-boilerplate-revisited/
- * 
- *   window.requestAnimFrame by Paul Irish
- *   http://paulirish.com/2011/requestanimationframe-for-smart-animating/
  */
-
-window.requestAnimFrame = (function(){
-  return window.requestAnimationFrame       || 
-		 window.webkitRequestAnimationFrame || 
-		 window.mozRequestAnimationFrame    || 
-		 window.oRequestAnimationFrame      || 
-		 window.msRequestAnimationFrame     || 
-		 function(callback, element){
-			window.setTimeout(callback, 1000 / 60);
-		 };
-})();
 
 (function($) {
     $.spriteAnimator = function(element, options, callback) {
@@ -160,50 +142,51 @@ window.requestAnimFrame = (function(){
 					plugin.stop();
 				});
 				
-				universe.log('Loaded: ' + plugin.settings.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
+				//console.log('Loaded: ' + plugin.settings.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
 				
 				plugin.play();
 			});
 		};
 		
 		plugin.play = function() {
-			if ($element !== null && $element.filter(':visible')) {
-				if (plugin.globals.loaded && plugin.settings.script.length > 0) {
-					time = new Date();
-					if ((time - plugin.globals.lastTime) >= plugin.globals.nextDelay) {
-						
-						if (plugin.settings.play) {
-							var frame = plugin.settings.script[plugin.globals.frameIterator];
-							var delay = (frame.delay != undefined ? frame.delay : plugin.settings.delay);
-							
-							//universe.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + delay);
-							_next(frame);
-							
-							if (plugin.settings.outOfSightDie) {
-								var _viewportWidth = $(document).width();
-								var _viewportHeight = $(document).height();
-								var _elementLeft = $element.offset().left;
-								var _elementTop = $element.offset().top;
-								if ((_elementLeft > _viewportWidth || _elementLeft < 0) ||
-									(_elementTop > _viewportHeight || _elementTop < 0))	{
-										plugin.stop();
-								}
-							}
-							
-							plugin.globals.lastTime = time;
-							plugin.globals.nextDelay = delay;
-						} else {
-							plugin.stop();
-						}
-					}
-				}
-			}
-			requestAnimFrame( plugin.play );
+
+            // Should be called as soon as possible
+			requestAnimationFrame( plugin.play );
+
+            // Render frame if element is within viewport
+			if ($element !== null) {
+                if (_inViewport($element)) {
+                    if (plugin.globals.loaded && plugin.settings.script.length > 0) {
+                        time = new Date();
+                        if ((time - plugin.globals.lastTime) >= plugin.globals.nextDelay) {
+                            
+                            if (plugin.settings.play) {
+                                var frame = plugin.settings.script[plugin.globals.frameIterator];
+                                var delay = (frame.delay != undefined ? frame.delay : plugin.settings.delay);
+                                
+                                //console.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + delay);
+                                _next(frame);
+                                
+                                plugin.globals.lastTime = time;
+                                plugin.globals.nextDelay = delay;
+                            } else {
+                                plugin.stop();
+                            }
+                        }
+                    }
+                } else {
+                    if (plugin.settings.outOfSightDie) {
+                        plugin.stop();
+                    }
+                }
+            }
         };
         
         plugin.stop = function() {
 			plugin.settings.play = false;
-			callback.call(); 
+			if (typeof callback != 'undefined') {
+                callback.call();
+            }
 		};
 		
         // private methods
@@ -239,9 +222,9 @@ window.requestAnimFrame = (function(){
 			}
         };
         
-		// Based on paul irish imagesLoaded plugin
-		var _isLoaded = function ( el, _callback ) {
-			var elems = $(el).filter('img'),
+		// Based on Paul Irish imagesLoaded plugin
+		var _isLoaded = function (element, _callback ) {
+			var elems = $(element).filter('img'),
 			len   = elems.length,
 			blank = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 			
@@ -263,7 +246,16 @@ window.requestAnimFrame = (function(){
 			
 			return this;
 		};
-  
+
+        // Test to see if element is within the viewport
+        var _inViewport = function(element) {
+            var _aboveTop =  ($(window).scrollTop() >= $element.offset().top + plugin.globals.frameHeight);
+            var _belowFold = ($(window).height() + $(window).scrollTop() <= $element.offset().top);
+            var _leftOfScreen = ($(window).scrollLeft() >= $element.offset().left + plugin.globals.frameWidth);
+            var _rightOfScreen = ($(window).width() + $(window).scrollLeft() <= $element.offset().left);
+            return (!_aboveTop && !_belowFold && !_leftOfScreen && !_rightOfScreen);
+        };
+        
         plugin.init();
 
     };
@@ -292,3 +284,34 @@ window.requestAnimFrame = (function(){
     };
 	
 })(jQuery);
+
+
+/**
+ * Polyfill: requestAnimationFrame by Paul Irish and Erik Möller
+ * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
+ * http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+ */
+(function() {
+    var lastTime = 0;
+    var vendors = ['ms', 'moz', 'webkit', 'o'];
+    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame = 
+          window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
+    }
+ 
+    if (!window.requestAnimationFrame)
+        window.requestAnimationFrame = function(callback, element) {
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+              timeToCall);
+            lastTime = currTime + timeToCall;
+            return id;
+        };
+ 
+    if (!window.cancelAnimationFrame)
+        window.cancelAnimationFrame = function(id) {
+            clearTimeout(id);
+        };
+}());
