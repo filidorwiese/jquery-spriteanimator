@@ -134,7 +134,7 @@
                 //console.log('Loaded: ' + plugin.settings.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
 
                 // Pause?
-                if (plugin.settings.run == 0) {
+                if (plugin.settings.run === 0) {
                     plugin.settings.play = false;
                 }
                 plugin.loop();
@@ -155,30 +155,53 @@
                     
                     // Render next frame only if element is visible and within viewport
                     if (plugin.settings.play) {
-                        plugin.nextFrame();
+                        if ($element.filter(':visible') && _inViewport($element)) {
+                            var frame = plugin.settings.script[plugin.globals.frameIterator];
+                            plugin.globals.nextDelay = (frame.delay != undefined ? frame.delay : plugin.settings.delay);
+                            plugin.globals.lastTime = time;
+                            plugin.nextFrame();
+                        } else {
+                            if (plugin.settings.outOfViewStop) {
+                                plugin.stop();
+                            }
+                        }
                     }
+                    
                 }
                 
             }
         };
 
         plugin.nextFrame = function() {
-             if ($element.filter(':visible') && _inViewport($element)) {
-                var frame = plugin.settings.script[plugin.globals.frameIterator];
-                var delay = (frame.delay != undefined ? frame.delay : plugin.settings.delay);
-                
-                //console.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + delay);
-                _next(frame);
-                
-                plugin.globals.lastTime = time;
-                plugin.globals.nextDelay = delay;
-            } else {
-                if (plugin.settings.outOfViewStop) {
+            var frame = plugin.settings.script[plugin.globals.frameIterator];
+            _drawFrame(frame);
+            
+            // Update counter
+            plugin.globals.frameIterator += 1;
+            if (plugin.globals.frameIterator >= plugin.settings.script.length) {
+                plugin.globals.frameIterator = 0;
+                plugin.settings.run -= 1;
+                if (plugin.settings.run === 0) {
                     plugin.stop();
                 }
             }
         };
 
+        plugin.previousFrame = function() {
+            var frame = plugin.settings.script[plugin.globals.frameIterator];
+            _drawFrame(frame);
+            
+            // Update counter
+            plugin.globals.frameIterator -= 1;
+            if (plugin.globals.frameIterator < 0) {
+                plugin.globals.frameIterator = plugin.settings.script.length - 1;
+                plugin.settings.run -= 1;
+                if (plugin.settings.run === 0) {
+                    plugin.stop();
+                }
+            }
+        };
+        
         plugin.pause = function() {
             plugin.settings.play = false;
         };
@@ -194,7 +217,7 @@
             }
         };
         
-        var _next = function( frame ) {
+        var _drawFrame = function( frame ) {
             var row = Math.ceil(frame.frame / plugin.globals.sheetCols);
             var col = frame.frame - ((row - 1) * plugin.globals.sheetCols);
             var bgX = ((col - 1) * plugin.globals.frameWidth) * -1;
@@ -204,6 +227,8 @@
                 $.error( 'spriteAnimator: position ' + frame.frame + ' out of bound' );
             }
             
+            //console.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + plugin.globals.nextDelay);
+            
             // Animate background
             $element.css('background-position', bgX + 'px ' + bgY + 'px');
             
@@ -212,16 +237,6 @@
             if (frame.bottom != undefined) { $element.css('bottom', ($element.position().bottom + frame.bottom) + 'px'); }
             if (frame.left != undefined) { $element.css('left', ($element.position().left + frame.left) + 'px'); }
             if (frame.right != undefined) { $element.css('right', ($element.position().right + frame.right) + 'px'); }
-            
-            // Update counter
-            plugin.globals.frameIterator += 1;
-            if (plugin.globals.frameIterator >= plugin.settings.script.length) {
-                plugin.globals.frameIterator = 0;
-                plugin.settings.run -= 1;
-                if (plugin.settings.run === 0) {
-                    plugin.stop();
-                }
-            }
         };
         
         // Based on Paul Irish imagesLoaded plugin
@@ -256,7 +271,7 @@
             var _leftOfScreen = ($(window).scrollLeft() >= $element.offset().left + plugin.globals.frameWidth);
             var _rightOfScreen = ($(window).width() + $(window).scrollLeft() <= $element.offset().left);
             return (!_aboveTop && !_belowFold && !_leftOfScreen && !_rightOfScreen);
-        }
+        };
         
         plugin.init();
 
@@ -293,7 +308,7 @@
           window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
     }
  
-    if (!window.requestAnimationFrame)
+    if (!window.requestAnimationFrame) {
         window.requestAnimationFrame = function(callback, element) {
             var currTime = new Date().getTime();
             var timeToCall = Math.max(0, 16 - (currTime - lastTime));
@@ -302,9 +317,11 @@
             lastTime = currTime + timeToCall;
             return id;
         };
- 
-    if (!window.cancelAnimationFrame)
+    }
+    
+    if (!window.cancelAnimationFrame) {
         window.cancelAnimationFrame = function(id) {
             clearTimeout(id);
         };
+    }
 }());
