@@ -37,20 +37,14 @@
             frameIterator: 0,
             lastTime: 0,
             nextDelay: 0,
-            outOfSightDie: false,
+            outOfViewStop: false,
             cutOffFrames: 0
         };
         
-        // this will hold the merged default, and user-provided options
-        // plugin's properties will be available through this object like:
-        // plugin.settings.propertyName from inside the plugin or
-        // element.data('pluginName').settings.propertyName from outside the plugin, where "element" is the
-        // element the plugin is attached to;
         plugin.settings = {};
 
         var $element = $(element);
         
-        // constructor
         plugin.init = function() {
             plugin.settings = $.extend({}, defaults, options);
             plugin.globals = globals;
@@ -61,23 +55,17 @@
             plugin.load();
         };
         
-        // destructor
         plugin.destroy = function() {
             $element.removeData('spriteAnimator');
             $element = null;
         };
         
-        // public methods
-        // these methods can be called like:
-        // plugin.methodName(arg1, arg2, ... argn) from inside the plugin or
-        // element.data('pluginName').publicMethod(arg1, arg2, ... argn) from outside the plugin, where "element"
-        // is the element the plugin is attached to;
         plugin.load = function() {
             var _preload = new Image();
             _preload.src = plugin.settings.url;
             
             _isLoaded(_preload, function(){
-                // FIX for some unexplained firefox bug that loads this twice.
+                // Fix for some unexplained firefox bug that loads this twice.
                 if (plugin.globals.loaded) { return; }
 
                 plugin.globals.loaded = true;
@@ -137,21 +125,26 @@
                         $element.css({left: plugin.settings.left});
                     }
                 }
-                
+
+                // Bind stop event
                 $element.off('stop').on('stop', function(){
                     plugin.stop();
                 });
                 
                 //console.log('Loaded: ' + plugin.settings.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
-                
-                plugin.play();
+
+                // Pause?
+                if (plugin.settings.run == 0) {
+                    plugin.settings.play = false;
+                }
+                plugin.loop();
             });
         };
         
-        plugin.play = function() {
-
+        plugin.loop = function() {
+            
             // Should be called as soon as possible
-            requestAnimationFrame( plugin.play );
+            requestAnimationFrame( plugin.loop );
 
             // Element loaded and has script?
             if ($element !== null && plugin.globals.loaded && plugin.settings.script.length > 0) {
@@ -162,27 +155,36 @@
                     
                     // Render next frame only if element is visible and within viewport
                     if (plugin.settings.play) {
-                        if ($element.filter(':visible') && _inViewport($element)) {
-                            var frame = plugin.settings.script[plugin.globals.frameIterator];
-                            var delay = (frame.delay != undefined ? frame.delay : plugin.settings.delay);
-                            
-                            //console.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + delay);
-                            _next(frame);
-                            
-                            plugin.globals.lastTime = time;
-                            plugin.globals.nextDelay = delay;
-                        } else {
-                            if (plugin.settings.outOfSightDie) {
-                                plugin.stop();
-                            }
-                        }
-                    } else {
-                        plugin.stop();
+                        plugin.nextFrame();
                     }
-                    
                 }
                 
             }
+        };
+
+        plugin.nextFrame = function() {
+             if ($element.filter(':visible') && _inViewport($element)) {
+                var frame = plugin.settings.script[plugin.globals.frameIterator];
+                var delay = (frame.delay != undefined ? frame.delay : plugin.settings.delay);
+                
+                //console.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + delay);
+                _next(frame);
+                
+                plugin.globals.lastTime = time;
+                plugin.globals.nextDelay = delay;
+            } else {
+                if (plugin.settings.outOfViewStop) {
+                    plugin.stop();
+                }
+            }
+        };
+
+        plugin.pause = function() {
+            plugin.settings.play = false;
+        };
+
+        plugin.play = function() {
+            plugin.settings.play = true;
         };
         
         plugin.stop = function() {
@@ -192,9 +194,6 @@
             }
         };
         
-        // private methods
-        // these methods can be called only from inside the plugin like:
-        // methodName(arg1, arg2, ... argn)
         var _next = function( frame ) {
             var row = Math.ceil(frame.frame / plugin.globals.sheetCols);
             var col = frame.frame - ((row - 1) * plugin.globals.sheetCols);
@@ -263,25 +262,16 @@
 
     };
 
-    // add the plugin to the jQuery.fn object
+    // Boilerplate: http://stefangabos.ro/jquery/jquery-plugin-boilerplate-revisited/
     $.fn.spriteAnimator = function(options, callback) {
         
-        // iterate through the DOM elements we are attaching the plugin to
         return this.each(function() {
-            // destroy if plugin has already been attached to the element
             if (undefined != $(this).data('spriteAnimator')) {
                 $(this).data('spriteAnimator').destroy();
             }
             
-            // create a new instance of the plugin
-            // pass the DOM element and the user-provided options as arguments
             var plugin = new $.spriteAnimator(this, options, callback);
             
-            // in the jQuery version of the element
-            // store a reference to the plugin object
-            // you can later access the plugin and its methods and properties like
-            // element.data('pluginName').publicMethod(arg1, arg2, ... argn) or
-            // element.data('pluginName').settings.propertyName
             $(this).data('spriteAnimator', plugin);
         });
     };
