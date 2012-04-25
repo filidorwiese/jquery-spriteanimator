@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2012/04/22)
+ * jQuery spriteAnimator (revision 2012/04/25)
  * http://fili.nl
  * 
  * Copyright (c) Fili Wiese, ONI
@@ -51,7 +51,10 @@
             
             if (options.cols === undefined) { $.error( 'spriteAnimator: cols not set' ); }
             if (options.rows === undefined) { $.error( 'spriteAnimator: rows not set' ); }
-            
+            if (options.url === undefined) {
+                // If no sprite is specified try to use background-image
+                plugin.settings.url = $element.css("background-image").replace(/"/g,"").replace(/url\(|\)$/ig, "");
+            }
             plugin.load();
         };
         
@@ -137,6 +140,8 @@
                 if (plugin.settings.run === 0) {
                     plugin.settings.play = false;
                 }
+
+                // Enter the animation loop
                 plugin.loop();
             });
         };
@@ -144,8 +149,8 @@
         plugin.loop = function() {
             
             // Should be called as soon as possible
-            requestAnimationFrame( plugin.loop );
-
+            requestAnimFrame( plugin.loop );
+            
             // Element loaded and has script?
             if ($element !== null && plugin.globals.loaded && plugin.settings.script.length > 0) {
                 
@@ -173,6 +178,8 @@
         };
 
         plugin.nextFrame = function() {
+            if (!plugin.globals.loaded) { return false; }
+            
             var frame = plugin.settings.script[plugin.globals.frameIterator];
             _drawFrame(frame);
             
@@ -188,6 +195,8 @@
         };
 
         plugin.previousFrame = function() {
+            if (!plugin.globals.loaded) { return false; }
+            
             var frame = plugin.settings.script[plugin.globals.frameIterator];
             _drawFrame(frame);
             
@@ -199,6 +208,15 @@
                 if (plugin.settings.run === 0) {
                     plugin.stop();
                 }
+            }
+        };
+
+        plugin.goToFrame = function(frameNumber) {
+            if (!plugin.globals.loaded) { return false; }
+            
+            var frame = plugin.settings.script[frameNumber];
+            if (frame !== undefined) {
+                _drawFrame(frame);
             }
         };
         
@@ -279,7 +297,6 @@
 
     // Boilerplate: http://stefangabos.ro/jquery/jquery-plugin-boilerplate-revisited/
     $.fn.spriteAnimator = function(options, callback) {
-        
         return this.each(function() {
             if (undefined != $(this).data('spriteAnimator')) {
                 $(this).data('spriteAnimator').destroy();
@@ -295,33 +312,18 @@
 
 
 /**
- * Polyfill: requestAnimationFrame by Paul Irish and Erik Möller
+ * Polyfill: requestAnimationFrame by Paul Irish
  * http://paulirish.com/2011/requestanimationframe-for-smart-animating/
- * http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
  */
-(function() {
-    var lastTime = 0;
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-        window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame = 
-          window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
-    }
- 
-    if (!window.requestAnimationFrame) {
-        window.requestAnimationFrame = function(callback, element) {
-            var currTime = new Date().getTime();
-            var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
-              timeToCall);
-            lastTime = currTime + timeToCall;
-            return id;
-        };
-    }
-    
-    if (!window.cancelAnimationFrame) {
-        window.cancelAnimationFrame = function(id) {
-            clearTimeout(id);
-        };
-    }
-}());
+if (!window.requestAnimFrame) {
+    window.requestAnimFrame = (function(){
+      return  window.requestAnimationFrame       || 
+              window.webkitRequestAnimationFrame || 
+              window.mozRequestAnimationFrame    || 
+              window.oRequestAnimationFrame      || 
+              window.msRequestAnimationFrame     || 
+              function( callback ){
+                window.setTimeout(callback, 1000 / 60);
+              };
+    })();
+}
