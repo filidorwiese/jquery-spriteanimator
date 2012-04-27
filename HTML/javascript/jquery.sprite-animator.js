@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2012/04/25)
+ * jQuery spriteAnimator (revision 2012/04/26)
  * http://fili.nl
  * 
  * Copyright (c) Fili Wiese, ONI
@@ -213,6 +213,12 @@
 
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.globals.loaded) { return false; }
+            
+            // Make sure given framenumber is within the animation
+            if (frameNumber > (plugin.settings.script.length - 1)) {
+                var _remainder = parseInt(frameNumber / plugin.settings.script.length, 0);
+                frameNumber = frameNumber - (_remainder * plugin.settings.script.length);
+            }
             
             var frame = plugin.settings.script[frameNumber];
             if (frame !== undefined) {
