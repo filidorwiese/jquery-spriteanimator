@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2012/04/26)
+ * jQuery spriteAnimator (revision 2012/06/04)
  * http://fili.nl
  * 
  * Copyright (c) Fili Wiese, ONI
@@ -23,6 +23,9 @@
             bottom: null,
             left: null,
             right: null,
+            outOfViewStop: false,
+            cutOffFrames: 0,
+            startFrame: 0,
             script: []
         };
         
@@ -36,9 +39,7 @@
             frameHeight: 0,
             frameIterator: 0,
             lastTime: 0,
-            nextDelay: 0,
-            outOfViewStop: false,
-            cutOffFrames: 0
+            nextDelay: 0
         };
         
         plugin.settings = {};
@@ -100,7 +101,7 @@
                 if (plugin.settings.reversed) {
                     plugin.settings.script.reverse();
                 }
-                
+
                 $element.css({
                     position: 'absolute',
                     width: plugin.globals.frameWidth,
@@ -142,6 +143,14 @@
                 }
 
                 // Enter the animation loop
+                if (plugin.settings.startFrame) {
+                    plugin.globals.frameIterator = plugin.settings.startFrame;
+                    plugin.goToFrame(plugin.globals.frameIterator);
+                }
+                
+                //main.log(plugin.globals.frameIterator);
+                //main.log(plugin.settings.frameIterator);
+                //plugin.goToFrame(plugin.globals.frameIterator);
                 plugin.loop();
             });
         };
@@ -182,7 +191,7 @@
             
             var frame = plugin.settings.script[plugin.globals.frameIterator];
             _drawFrame(frame);
-            
+                        
             // Update counter
             plugin.globals.frameIterator += 1;
             if (plugin.globals.frameIterator >= plugin.settings.script.length) {
@@ -230,7 +239,23 @@
             plugin.settings.play = false;
         };
 
-        plugin.play = function() {
+        plugin.play = function(playhead) {
+            if (typeof(playhead.reversed) !== 'undefined') {
+                if (playhead.reversed) {
+                    if (!plugin.settings.reversed) {
+                        plugin.settings.reversed = playhead.reversed;
+                        plugin.settings.script.reverse();
+                    }
+                } else {
+                    if (plugin.settings.reversed) {
+                        plugin.settings.reversed = playhead.reversed;
+                        plugin.settings.script.reverse();
+                    }
+                }
+            }
+            if (typeof(playhead.run) !== 'undefined') {
+                plugin.settings.run = playhead.run;
+            }
             plugin.settings.play = true;
         };
         
