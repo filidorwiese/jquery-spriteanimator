@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2013/01/22)
+ * jQuery spriteAnimator (revision 2013/01/31)
  * http://fili.nl
  * 
  * Copyright (c) Filidor Wiese, ONI
@@ -19,7 +19,6 @@
             sheetRows: 0,
             frameWidth: 0,
             frameHeight: 0,
-            frameIterator: 0,
             url: null,
             cols: null,
             rows: null,
@@ -40,7 +39,8 @@
             outOfViewStop: false,
             startFrame: 0,
             lastTime: 0,
-            nextDelay: 0
+            nextDelay: 0,
+            frameIterator: 0
         };
         
         plugin.globals = {};
@@ -65,13 +65,13 @@
         plugin.nextFrame = function() {
             if (!plugin.globals.loaded) { return false; }
             
-            var frame = plugin.playhead.script[plugin.globals.frameIterator];
+            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
             _drawFrame(frame);
                         
             // Update counter
-            plugin.globals.frameIterator += 1;
-            if (plugin.globals.frameIterator >= plugin.playhead.script.length) {
-                plugin.globals.frameIterator = 0;
+            plugin.playhead.frameIterator += 1;
+            if (plugin.playhead.frameIterator >= plugin.playhead.script.length) {
+                plugin.playhead.frameIterator = 0;
                 plugin.playhead.run -= 1;
                 if (plugin.playhead.run === 0) {
                     plugin.playhead.play = false;
@@ -82,13 +82,13 @@
         plugin.previousFrame = function() {
             if (!plugin.globals.loaded) { return false; }
             
-            var frame = plugin.playhead.script[plugin.globals.frameIterator];
+            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
             _drawFrame(frame);
             
             // Update counter
-            plugin.globals.frameIterator -= 1;
-            if (plugin.globals.frameIterator < 0) {
-                plugin.globals.frameIterator = plugin.playhead.script.length - 1;
+            plugin.playhead.frameIterator -= 1;
+            if (plugin.playhead.frameIterator < 0) {
+                plugin.playhead.frameIterator = plugin.playhead.script.length - 1;
                 plugin.playhead.run -= 1;
                 if (plugin.playhead.run === 0) {
                     plugin.playhead.play = false;
@@ -134,8 +134,8 @@
                 plugin.playhead = $.extend({}, anim, options);
                 
                 if (plugin.playhead.startFrame) {
-                    plugin.globals.frameIterator = plugin.playhead.startFrame;
-                    plugin.goToFrame(plugin.globals.frameIterator);
+                    plugin.playhead.frameIterator = plugin.playhead.startFrame;
+                    plugin.goToFrame(plugin.playhead.frameIterator);
                 }
                 
                 // Reverse script if set
@@ -259,7 +259,7 @@
                     // Render next frame only if element is visible and within viewport
                     if (plugin.playhead.play) {
                         if ($element.filter(':visible') && _inViewport($element)) {
-                            var frame = plugin.playhead.script[plugin.globals.frameIterator];
+                            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
                             plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
                             plugin.playhead.lastTime = time;
                             plugin.nextFrame();
@@ -286,7 +286,7 @@
                 $.error( 'spriteAnimator: position ' + frame.frame + ' out of bound' );
             }
             
-            //console.log('[' + plugin.globals.frameIterator + '] frame: ' + frame.frame + ', delay: ' + plugin.playhead.nextDelay);
+            //console.log('[' + plugin.playhead.frameIterator + '] frame: ' + frame.frame + ', delay: ' + plugin.playhead.nextDelay);
             
             // Animate background
             $element.css('background-position', bgX + 'px ' + bgY + 'px');
