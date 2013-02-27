@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2013/01/31)
+ * jQuery spriteAnimator (revision 2013/02/27)
  * http://fili.nl
  * 
  * Copyright (c) Filidor Wiese, ONI
@@ -98,7 +98,7 @@
 
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.globals.loaded) { return false; }
-            
+
             // Make sure given framenumber is within the animation
             if (frameNumber > 0) {
                 frameNumber -= 1;
@@ -116,8 +116,14 @@
                 return false;
             }
             
+            // If frameNumber equals the current frame, do nothing.
+            if (frameNumber === plugin.playhead.frameIterator) {
+                return false;
+            }
+            
             // Go to frame
-            var frame = plugin.playhead.script[frameNumber];
+            plugin.playhead.frameIterator = frameNumber;
+            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
             if (frame !== undefined) {
                 _drawFrame(frame);
             }
@@ -128,14 +134,14 @@
             plugin.playhead.pause = true;
         };
 
-        plugin.play = function(options) {
+        plugin.play = function(options, clbk) {
             if (!plugin.playhead.pause) {
                 // Start a new animation
                 plugin.playhead = $.extend({}, anim, options);
-                
+
+                // Start frame?
                 if (plugin.playhead.startFrame) {
-                    plugin.playhead.frameIterator = plugin.playhead.startFrame;
-                    plugin.goToFrame(plugin.playhead.frameIterator);
+                    plugin.goToFrame(plugin.playhead.startFrame);
                 }
                 
                 // Reverse script if set
@@ -150,6 +156,8 @@
                 plugin.playhead.pause = false;
                 _loop();
             }
+
+            callback = clbk;
         };
         
         plugin.stop = function(requestFrameId) {
@@ -220,6 +228,8 @@
                     plugin.playhead.play = false;
                 });
 
+                plugin.globals.loaded = true;
+                
                 // Auto script if not yet set
                 if (plugin.playhead.script.length === 0) {
                     for (i=0; i < (plugin.globals.sheetCols * plugin.globals.sheetRows); i++) {
@@ -237,9 +247,12 @@
                     if (plugin.playhead.reversed) {
                         plugin.playhead.script.reverse();
                     }
+                    
+                    // Start frame?
+                    if (plugin.globals.startFrame) {
+                        plugin.goToFrame(plugin.globals.startFrame);
+                    }
                 }
-                
-                plugin.globals.loaded = true;
                 
                 //console.log('Loaded: ' + plugin.globals.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
             });
@@ -285,7 +298,7 @@
             if (row > plugin.globals.sheetRows || col > plugin.globals.sheetCols) {
                 $.error( 'spriteAnimator: position ' + frame.frame + ' out of bound' );
             }
-            
+
             //console.log('[' + plugin.playhead.frameIterator + '] frame: ' + frame.frame + ', delay: ' + plugin.playhead.nextDelay);
             
             // Animate background
