@@ -9,7 +9,7 @@
 
 <body>
 
-<div id="sprite" style="background-image:url(sprites/pxlfili_lezen_S.png)"></div>
+<div id="sprite" style="background-image:url(sprites/pxlfili_arcade_S.png)"></div>
 
 <p>
     <button id="play">play</button>
@@ -32,37 +32,12 @@
         debug: true,
         top: 200,
         left: 100,
-        cols: 5,
-        rows: 3
+        cols: 3,
+        rows: 9
     }).play({
-        run: 2,
+        play: false,
+        run: 1,
         delay: 200,
-        script: [
-            {sprite: 1}, // regels lezen
-            {sprite: 2, delay: 800},
-            {sprite: 1},
-            {sprite: 3, delay: 400},
-            {sprite: 1}, // regels lezen
-            {sprite: 2, delay: 800},
-            {sprite: 1},
-            {sprite: 3, delay: 400},
-            {sprite: 1}, // regels lezen
-            {sprite: 2, delay: 400},
-            {sprite: 1},
-            {sprite: 3, delay: 800},
-            {sprite: 1}, // ogen knipperen
-            {sprite: 4},
-            {sprite: 1},
-            
-            {sprite: 5}, // bladzijde omslaan
-            {sprite: 6},
-            {sprite: 7},
-            {sprite: 8},
-            {sprite: 9},
-            {sprite: 10},
-            {sprite: 11},
-            {sprite: 12}
-        ],
         onStop: function(){
             console.log('onStop callback called');
         }
