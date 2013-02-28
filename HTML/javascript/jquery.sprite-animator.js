@@ -6,12 +6,19 @@
  * Licensed under LGPL 2.1 - http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
+// TODO:
+//      - .pause()/.unpause() herschrijven
+//      - onPlay() & onPause() callback?
+//      - .tweenFromTo met easing
+//      - .nextFrame() / .previousFrame frameIterator herzien?
+
 (function($) {
-    $.spriteAnimator = function(element, options, callback) {
+    $.spriteAnimator = function(element, options) {
         
         var plugin = this;
         
         var defaults = {
+            debug: false,
             loaded: false,
             sheetWidth: 0,
             sheetHeight: 0,
@@ -26,7 +33,8 @@
             bottom: null,
             left: null,
             right: null,
-            cutOffFrames: 0
+            cutOffFrames: 0,
+            onLoaded: function(){}
         };
         
         var anim = {
@@ -35,12 +43,17 @@
             delay: 50,
             run: 1,
             reversed: false,
-            script: [],
             outOfViewStop: false,
-            startFrame: 0,
+            script: [],
+            scriptIterator: 0,
+            startFrame: 1,
             lastTime: 0,
             nextDelay: 0,
-            frameIterator: 0
+            currentFrame: 0,
+            currentSprite: 0,
+            onPause: function(){},
+            onUnpause: function(){},
+            onStop: function(){}
         };
         
         plugin.globals = {};
@@ -48,57 +61,88 @@
         
         var $element = $(element);
         
+        /**
+         * Constructor
+         */
         plugin.init = function() {
             plugin.globals = $.extend({}, defaults, options);
             plugin.playhead = $.extend({}, anim, {});
             
-            if (options.cols === undefined) { $.error( 'spriteAnimator: cols not set' ); }
-            if (options.rows === undefined) { $.error( 'spriteAnimator: rows not set' ); }
+            if (options.cols === undefined) { throw 'spriteAnimator: cols not set'; }
+            if (options.rows === undefined) { throw 'spriteAnimator: rows not set'; }
             if (options.url === undefined) {
                 // If no sprite is specified try to use background-image
-                plugin.globals.url = $element.css("background-image").replace(/"/g,"").replace(/url\(|\)$/ig, "");
+                var cssBackgroundImage = $element.css("background-image");
+                if (cssBackgroundImage == 'none') {
+                    throw 'spriteAnimator: no spritesheet found';
+                } else {
+                    plugin.globals.url = cssBackgroundImage.replace(/"/g,"").replace(/url\(|\)$/ig, "");
+                }
             }
             
             _load();
         };
+
+        /**
+         * Get the current frameNumber from script
+         */
+        plugin.currentFrame = function() {
+            return plugin.playhead.currentFrame;
+        };
+
+        /**
+         * Get the current spriteNumber
+         */
+        plugin.currentSprite = function() {
+            return plugin.playhead.currentSprite;
+        };
         
+        /**
+         * Go forward one frame in script
+         */
         plugin.nextFrame = function() {
             if (!plugin.globals.loaded) { return false; }
             
-            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
+            var frame = plugin.playhead.script[plugin.playhead.scriptIterator];
             _drawFrame(frame);
                         
             // Update counter
-            plugin.playhead.frameIterator += 1;
-            if (plugin.playhead.frameIterator >= plugin.playhead.script.length) {
-                plugin.playhead.frameIterator = 0;
+            plugin.playhead.scriptIterator += 1;
+            if (plugin.playhead.scriptIterator >= plugin.playhead.script.length) {
+                plugin.playhead.scriptIterator = 0;
                 plugin.playhead.run -= 1;
-                if (plugin.playhead.run === 0) {
-                    plugin.playhead.play = false;
-                }
+                //if (plugin.playhead.run === 0) {
+                //    plugin.playhead.play = false;
+                //}
             }
         };
 
+        /**
+         * Go back one frame in script
+         */
         plugin.previousFrame = function() {
             if (!plugin.globals.loaded) { return false; }
             
-            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
+            var frame = plugin.playhead.script[plugin.playhead.scriptIterator];
             _drawFrame(frame);
             
             // Update counter
-            plugin.playhead.frameIterator -= 1;
-            if (plugin.playhead.frameIterator < 0) {
-                plugin.playhead.frameIterator = plugin.playhead.script.length - 1;
+            plugin.playhead.scriptIterator -= 1;
+            if (plugin.playhead.scriptIterator < 0) {
+                plugin.playhead.scriptIterator = plugin.playhead.script.length - 1;
                 plugin.playhead.run -= 1;
-                if (plugin.playhead.run === 0) {
-                    plugin.playhead.play = false;
-                }
+                //if (plugin.playhead.run === 0) {
+                //    plugin.playhead.play = false;
+                //}
             }
         };
 
+        /**
+         * Jump to certain frame in script
+         */
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.globals.loaded) { return false; }
-
+            
             // Make sure given framenumber is within the animation
             if (frameNumber > 0) {
                 frameNumber -= 1;
@@ -116,50 +160,48 @@
                 return false;
             }
             
-            // If frameNumber equals the current frame, do nothing.
-            if (frameNumber === plugin.playhead.frameIterator) {
-                return false;
-            }
-            
-            // Go to frame
-            plugin.playhead.frameIterator = frameNumber;
-            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
+            // Draw frame
+            plugin.playhead.scriptIterator = frameNumber;
+            var frame = plugin.playhead.script[plugin.playhead.scriptIterator];
             if (frame !== undefined) {
                 _drawFrame(frame);
             }
         };
 
+        /**
+         * Pause the animation loop
+         */
         plugin.pause = function() {
+            _log('Pause called');
             plugin.playhead.play = false;
-            plugin.playhead.pause = true;
+            
+            if (typeof plugin.playhead.onPause == 'function') {
+                plugin.playhead.onPause.call();
+            }
         };
 
-        plugin.play = function(options, clbk) {
-            if (!plugin.playhead.pause) {
-                // Start a new animation
-                plugin.playhead = $.extend({}, anim, options);
-
-                // Start frame?
-                if (plugin.playhead.startFrame) {
-                    plugin.goToFrame(plugin.playhead.startFrame);
-                }
-                
-                // Reverse script if set
-                if (plugin.playhead.script.length && plugin.playhead.reversed) {
-                    plugin.playhead.script.reverse();
-                }
-            }
+        /**
+         * Unpause the animation loop
+         */
+        plugin.unpause = function() {
+            _log('Unpause called');
+            plugin.playhead.play = true;
             
-            // Enter the animation loop
-            if (plugin.playhead.run !== 0) {
-                plugin.playhead.play = true;
-                plugin.playhead.pause = false;
-                _loop();
+            if (typeof plugin.playhead.onUnpause == 'function') {
+                plugin.playhead.onUnpause.call();
             }
+        };
 
-            callback = clbk;
+        /**
+         * Reset playhead to first frame
+         */
+        plugin.reset = function() {
+            plugin.playhead.scriptIterator = 0;
         };
         
+        /**
+         * Stop the animation and reset the playhead
+         */
         plugin.stop = function(requestFrameId) {
             plugin.playhead.play = false;
             
@@ -167,11 +209,58 @@
                 window.cancelAnimationFrame(requestFrameId);
             }
             
-            if (typeof callback != 'undefined') {
-                callback.call();
+            if (typeof plugin.playhead.onStop == 'function') {
+                plugin.playhead.onStop.call();
+            }
+        };
+
+        /**
+         * Define a new animation sequence and play it
+         */
+        plugin.play = function(options) {
+            _log('Play called');
+            // Start a new animation sequence
+            plugin.playhead = $.extend({}, anim, options);
+            
+            // Auto script if not yet set
+            if (plugin.playhead.script.length === 0) {
+                _autoScript();
+            }
+
+            // Reverse the script?
+            if (plugin.playhead.reversed) {
+                plugin.playhead.script.reverse();
+            }
+            
+            // Enter the animation loop
+            if (plugin.playhead.run !== 0) {
+                plugin.playhead.play = true;
+                _loop();
+            } else {
+                plugin.playhead.play = false;
             }
         };
         
+        /**
+         * Generate a linear script based on the spritesheet itself
+         */
+        var _autoScript = function() {
+            // Auto script if not yet set
+            for (i=0; i < (plugin.globals.sheetCols * plugin.globals.sheetRows); i++) {
+                plugin.playhead.script[i] = {sprite: (i + 1)};
+            }
+            
+            // CutOff a frame?
+            if (plugin.globals.cutOffFrames > 0) {
+                for (c = 0; c < plugin.globals.cutOffFrames ; c++) {
+                    plugin.playhead.script.pop();
+                }
+            }
+        }
+        
+        /**
+         * Load the spritesheet and position it correctly
+         */
         var _load = function() {
             var _preload = new Image();
             _preload.src = plugin.globals.url;
@@ -179,19 +268,20 @@
             _isLoaded(_preload, function(){
                 // Fix for some unexplained firefox bug that loads this twice.
                 if (plugin.globals.loaded) { return; }
+                plugin.globals.loaded = true;
 
                 plugin.globals.sheetWidth = _preload.width;
                 plugin.globals.sheetHeight = _preload.height;
-                
                 plugin.globals.frameWidth = parseInt(plugin.globals.sheetWidth / plugin.globals.cols, 10);
                 plugin.globals.frameHeight = parseInt(plugin.globals.sheetHeight / plugin.globals.rows, 10);
                 plugin.globals.sheetCols = plugin.globals.cols;
                 plugin.globals.sheetRows = plugin.globals.rows;
+                
                 if (plugin.globals.frameWidth % 1 > 0) {
-                    $.error( 'spriteAnimator: frameWidth ' + plugin.globals.frameWidth + ' is not a whole number' );
+                    throw 'spriteAnimator: frameWidth ' + plugin.globals.frameWidth + ' is not a whole number';
                 }
                 if (plugin.globals.frameHeight % 1 > 0) {
-                    $.error( 'spriteAnimator: frameHeight ' + plugin.globals.frameHeight + ' is not a whole number' );
+                    throw 'spriteAnimator: frameHeight ' + plugin.globals.frameHeight + ' is not a whole number';
                 }
                 
                 $element.css({
@@ -225,81 +315,86 @@
                 
                 // Bind stop event
                 $element.off('stop').on('stop', function(){
-                    plugin.playhead.play = false;
+                    plugin.stop();
                 });
 
-                plugin.globals.loaded = true;
-                
                 // Auto script if not yet set
                 if (plugin.playhead.script.length === 0) {
-                    for (i=0; i < (plugin.globals.sheetCols * plugin.globals.sheetRows); i++) {
-                        plugin.playhead.script[i] = {frame: (i + 1)};
-                    }
-                    
-                    // CutOff a frame?
-                    if (plugin.globals.cutOffFrames > 0) {
-                        for (c = 0; c < plugin.globals.cutOffFrames ; c++) {
-                            plugin.playhead.script.pop();
-                        }
-                    }
-                    
-                    // Reverse the script?
-                    if (plugin.playhead.reversed) {
-                        plugin.playhead.script.reverse();
-                    }
-                    
-                    // Start frame?
-                    if (plugin.globals.startFrame) {
-                        plugin.goToFrame(plugin.globals.startFrame);
-                    }
+                    _autoScript();
                 }
                 
-                //console.log('Loaded: ' + plugin.globals.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
+                // onLoaded callback
+                if (typeof plugin.globals.onLoaded == 'function') {
+                    plugin.globals.onLoaded.call();
+                }
+                
+                // Start frame?
+                if (plugin.globals.startFrame) {
+                    plugin.goToFrame(plugin.globals.startFrame);
+                }
+                
+                _log('Loaded: ' + plugin.globals.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
             });
         };
 
+        /**
+         * The animation loop
+         */
         var _loop = function(time) {
-            
             // Should be called as soon as possible
             var requestFrameId = window.requestAnimationFrame( _loop );
             //console.log(requestFrameId);
             
             // Wait until fully loaded
             if ($element !== null && plugin.globals.loaded && plugin.playhead.script.length > 0) {
-                // Throttle on nextDelay
-                if ((time - plugin.playhead.lastTime) >= plugin.playhead.nextDelay) {
+
+                // Only play when not paused
+                if (plugin.playhead.play) {
                     
-                    // Render next frame only if element is visible and within viewport
-                    if (plugin.playhead.play) {
-                        if ($element.filter(':visible') && _inViewport($element)) {
-                            var frame = plugin.playhead.script[plugin.playhead.frameIterator];
-                            plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
-                            plugin.playhead.lastTime = time;
-                            plugin.nextFrame();
-                        } else {
-                            if (plugin.playhead.outOfViewStop) {
-                                plugin.stop(requestFrameId);
+                    // Throttle on nextDelay
+                    if ((time - plugin.playhead.lastTime) >= plugin.playhead.nextDelay) {
+                        
+                        // Stop if run equals 0
+                        if (plugin.playhead.run !== 0) {
+
+                            // Render next frame only if element is visible and within viewport
+                            if ($element.filter(':visible') && _inViewport($element)) {
+                                var frame = plugin.playhead.script[plugin.playhead.scriptIterator];
+                                plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
+                                plugin.playhead.lastTime = time;
+                                plugin.nextFrame();
+                            } else {
+                                if (plugin.playhead.outOfViewStop) {
+                                    plugin.stop(requestFrameId);
+                                }
                             }
+                        } else {
+                            plugin.stop(requestFrameId);
                         }
-                    } else {
-                        plugin.stop(requestFrameId);
+                        
                     }
-                    
                 }
             }
         };
 
+        /**
+         * Draw a single frame
+         */
         var _drawFrame = function( frame ) {
-            var row = Math.ceil(frame.frame / plugin.globals.sheetCols);
-            var col = frame.frame - ((row - 1) * plugin.globals.sheetCols);
+            if (frame.sprite === plugin.playhead.currentSprite) { return false; }
+            
+            var row = Math.ceil(frame.sprite / plugin.globals.sheetCols);
+            var col = frame.sprite - ((row - 1) * plugin.globals.sheetCols);
             var bgX = ((col - 1) * plugin.globals.frameWidth) * -1;
             var bgY = ((row - 1) * plugin.globals.frameHeight) * -1;
             
             if (row > plugin.globals.sheetRows || col > plugin.globals.sheetCols) {
-                $.error( 'spriteAnimator: position ' + frame.frame + ' out of bound' );
+                throw 'spriteAnimator: position ' + frame.sprite + ' out of bound';
             }
 
-            //console.log('[' + plugin.playhead.frameIterator + '] frame: ' + frame.frame + ', delay: ' + plugin.playhead.nextDelay);
+            plugin.playhead.currentSprite = frame.sprite;
+
+            _log('[frame: ' + plugin.playhead.scriptIterator + '] sprite: ' + frame.sprite + ', delay: ' + plugin.playhead.nextDelay);
             
             // Animate background
             $element.css('background-position', bgX + 'px ' + bgY + 'px');
@@ -311,7 +406,10 @@
             if (frame.right != undefined) { $element.css('right', ($element.position().right + frame.right) + 'px'); }
         };
         
-        // Based on Paul Irish imagesLoaded plugin
+        /**
+         * Cross-browser test to make sure an image is loaded
+         * Based on Paul Irish imagesLoaded plugin
+         */
         var _isLoaded = function (element, _callback ) {
             var elems = $(element).filter('img'),
             len   = elems.length,
@@ -336,7 +434,9 @@
             return this;
         };
 
-        // Test to see if element is within the viewport
+        /**
+         * Test to see if an element is within the viewport
+         */
         var _inViewport = function(element) {
             var _aboveTop =  ($(window).scrollTop() >= $element.offset().top + plugin.globals.frameHeight);
             var _belowFold = ($(window).height() + $(window).scrollTop() <= $element.offset().top);
@@ -344,19 +444,31 @@
             var _rightOfScreen = ($(window).width() + $(window).scrollLeft() <= $element.offset().left);
             return (!_aboveTop && !_belowFold && !_leftOfScreen && !_rightOfScreen);
         };
+
+        /**
+         * Logging, but only if debug is set to true
+         */
+        var _log = function(logline) {
+            if (typeof console !== 'undefined' && plugin.globals.debug) {
+                console.log(logline);
+            }
+        };
         
         plugin.init();
 
     };
 
-    // Boilerplate: http://stefangabos.ro/jquery/jquery-plugin-boilerplate-revisited/
-    $.fn.spriteAnimator = function(options, callback) {
+    /**
+     * jQuery plugin wrapper
+     * Boilerplate: http://stefangabos.ro/jquery/jquery-plugin-boilerplate-revisited/
+     */
+    $.fn.spriteAnimator = function(options) {
         return this.each(function() {
             if (undefined != $(this).data('spriteAnimator')) {
                 $(this).removeData('spriteAnimator');
             }
             
-            var plugin = new $.spriteAnimator(this, options, callback);
+            var plugin = new $.spriteAnimator(this, options);
             
             $(this).data('spriteAnimator', plugin);
         }).data('spriteAnimator');

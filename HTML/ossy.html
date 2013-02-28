@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="nl" lang="nl" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<style>
+
+</style>
+</head>
+
+<body>
+    
+
+<div id="ossy-sprite" style="background-image:url(sprites/hosting-home__ossy-sprite.png)"></div>
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="javascript/jquery.sprite-animator.js"></script>
+<script>
+    // Insert Ossy animation
+    var ossyAnimating = false;
+    var idleVariants = ['knipperen', 'liggen', 'omkijken', 'kwispelen'];
+    var ossySprite = $('#ossy-sprite');
+    var ossySpriteData = ossySprite.spriteAnimator({
+        bottom: 200,
+        left: 100,
+        cols: 6,
+        rows: 4,
+        startFrame: 10,
+        onLoaded: function(){ console.log('loaded'); }
+    });
+
+    ossySprite.on('pootje', function(){
+        new Log('Ossy: pootje');
+        ossySpriteData.play({
+            run:1,
+            delay:100,
+            script: [
+                {frame:22, delay:100},
+                {frame:23, delay:100},
+                {frame:24, delay:3000},
+                {frame:23, delay:100}
+            ],
+            onStop: function(){
+                new Log('Ossy: done pootje');
+                ossySprite.trigger('knipperen');
+            }
+        });
+    });
+
+    ossySprite.on('kwispelen', function(){
+        new Log('Ossy: kwispelen');
+        ossySpriteData.play({
+            run:1,
+            delay:100,
+            script: [
+                {frame:11},
+                {frame:12},
+                {frame:13},
+                {frame:14},
+                {frame:13},
+                {frame:12},
+                {frame:11},
+                {frame:10},
+                {frame:11},
+                {frame:12},
+                {frame:13},
+                {frame:14},
+                {frame:13},
+                {frame:12},
+                {frame:11},
+                {frame:10}
+            ],
+            onStop: function(){
+                new Log('Ossy: done kwispelen');
+                ossySprite.trigger('knipperen');
+            }
+        });
+    });
+    
+    ossySprite.on('liggen', function(){
+        new Log('Ossy: liggen');
+        ossySpriteData.play({
+            run:1,
+            delay:100,
+            script: [
+                {frame: 10},
+                {frame: 9},
+                {frame: 8},
+                {frame: 7},
+                {frame: 6},
+                {frame: 5},
+                {frame: 4},
+                {frame: 3},
+                {frame: 2, delay:3000},
+                {frame: 1}
+            ],
+            onStop: function(){
+                new Log('Ossy: done liggen');
+                ossySprite.on('mousemove', function(event){
+                    $(this).off('mousemove');
+                    ossySprite.trigger('staan');
+                });
+            }
+        });
+    });
+
+    ossySprite.on('staan', function(){
+        new Log('Ossy: staan');
+        ossySpriteData.play({
+            run:1,
+            delay:100,
+            script: [
+                {frame: 1, delay:2000},
+                {frame: 2, delay:1000},
+                {frame: 1},
+                {frame: 2, delay:1000},
+                {frame: 3},
+                {frame: 4, delay:1000},
+                {frame: 5},
+                {frame: 6},
+                {frame: 7},
+                {frame: 8},
+                {frame: 9},
+                {frame: 10}
+            ],
+            onStop: function(){
+                new Log('Ossy: done staan');
+                ossySprite.trigger('knipperen');
+            }
+        });
+    });
+
+    ossySprite.on('omkijken', function(){
+        new Log('Ossy: omkijken');
+        ossySpriteData.play({
+            run:1,
+            delay:100,
+            script: [
+                {frame: 10},
+                {frame: 16},
+                {frame: 17, delay:1000},
+                {frame: 16},
+                {frame: 10},
+                {frame: 18},
+                {frame: 19},
+                {frame: 20},
+                {frame: 21, delay:1000},
+                {frame: 20},
+                {frame: 19},
+                {frame: 18},
+                {frame: 10}
+            ],
+            onStop: function(){
+                new Log('Ossy: done omkijken');
+                ossySprite.trigger('knipperen');
+            }
+        });
+    });
+
+    ossySprite.on('knipperen', function(){
+        new Log('Ossy: knipperen');
+        ossySpriteData.play({
+            run:3,
+            delay:100,
+            script: [
+                {frame:10, delay:5000},
+                {frame:15, delay:350}
+            ],
+            onStop: function(){
+                new Log('Ossy: done knipperen');
+                ossySprite.trigger(idleVariants[randomize(0, (idleVariants.length-1))]);
+            }
+        });
+    });
+
+    // On click/touch trigger pootje anim
+    ossySprite.on('touchstart click', function(event){
+        event.preventDefault();
+        console.log(ossySpriteData.currentFrame());
+        if (ossySpriteData.currentFrame() === 10) {
+            ossySprite.trigger('pootje');
+        }
+    });
+
+    // On tab hide/show trigger staan/liggen anim
+    var visibilityState, visibilityChange; 
+    if (typeof document.hidden !== 'undefined') {
+        visibilityChange = 'visibilitychange';
+        visibilityState = document.hidden;
+    } else if (typeof document.mozHidden !== 'undefined') {
+        visibilityChange = 'mozvisibilitychange';
+        visibilityState = document.mozHidden;
+    } else if (typeof document.msHidden !== 'undefined') {
+        visibilityChange = 'msvisibilitychange';
+        visibilityState = document.msHidden;
+    } else if (typeof document.webkitHidden !== 'undefined') {
+        visibilityChange = 'webkitvisibilitychange';
+        visibilityState = document.webkitHidden;
+    }
+    $(document).on(visibilityChange, function(event){
+        if (visibilityState) {
+            ossySpriteData.play({
+                run:1,
+                delay:100,
+                script: [
+                    {frame:1}
+                ]
+            });
+        } else {
+            ossySprite.trigger('staan');
+        }
+    });
+    
+    ossySprite.trigger('knipperen');
+
+
+
+
+    // Log function, outputs only if in development
+    function Log(logline) {
+      if (typeof console !== 'undefined' && window.staging) {
+        console.log(logline);
+      }
+    }
+    
+    // Randomize function
+    randomize = function (min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    };
+
+</script>
+
+</body>
+</html>
