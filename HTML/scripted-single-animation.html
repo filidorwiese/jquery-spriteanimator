@@ -18,9 +18,11 @@
     <button id="reset">reset</button>
     <button id="nextFrame">nextFrame</button>
     <button id="previousFrame">previousFrame</button>
+    <button id="reverse">reverse</button>
 </p>
 <p>
     <label>Frame: </label><input type="text" size="5" id="framenumber" value="0" /><button id="goToFrame">goToFrame</button>
+    <label>Tempo: </label><input type="text" size="5" id="tempo" value="1" /><button id="setTempo">setTempo</button>
 </p>
 
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
@@ -98,12 +100,22 @@
         sprite.data('spriteAnimator').previousFrame();
     });
 
+    $('button#reverse').on('click', function(event){
+        event.preventDefault();
+        sprite.data('spriteAnimator').reverse();
+    });
+
     $('button#goToFrame').on('click', function(event){
         event.preventDefault();
         var frameNumber = $('input#framenumber').val() || 0;
         sprite.data('spriteAnimator').goToFrame(frameNumber);
     });
-    
+
+    $('button#setTempo').on('click', function(event){
+        event.preventDefault();
+        var tempo = $('input#tempo').val() || 1;
+        sprite.data('spriteAnimator').setTempo(tempo);
+    });
     
 </script>
 

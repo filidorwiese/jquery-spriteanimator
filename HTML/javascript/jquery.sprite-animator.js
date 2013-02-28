@@ -9,10 +9,9 @@
 // TODO:
 //      - .tweenFromTo met easing
 //      - .addAnimation()?
-//      - global playback speed setting?
 //      - run defineren by play()?
-//      - .goToFrame direct na init
-//      - play direction reversed?
+//      - crossbrowser
+//      - event/trigger based ipv callbacks?
 
 (function($) {
     $.spriteAnimator = function(element, options) {
@@ -35,14 +34,15 @@
             bottom: null,
             left: null,
             right: null,
-            cutOffFrames: 0,
-            onLoaded: function(){}
+            cutOffFrames: 0
+            //onLoaded: function(){}
         };
         
         var anim = {
             play: true,
             delay: 50,
-            run: 1,
+            tempo: 1,
+            run: -1,
             reversed: false,
             outOfViewStop: false,
             script: [],
@@ -50,10 +50,10 @@
             lastTime: 0,
             nextDelay: 0,
             currentFrame: 0,
-            currentSprite: 0,
-            onPlay: function(){},
+            currentSprite: 0
+            /*onPlay: function(){},
             onPause: function(){},
-            onStop: function(){}
+            onStop: function(){}*/
         };
         
         plugin.globals = {};
@@ -112,7 +112,6 @@
             
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             _drawFrame(frame);
-            
         };
 
         /**
@@ -131,13 +130,13 @@
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             _drawFrame(frame);
         };
-
+        
         /**
          * Jump to certain frame in script
          */
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.globals.loaded) { return false; }
-
+            
             // floor framenumber
             frameNumber = Math.floor(frameNumber);
             
@@ -153,7 +152,7 @@
                 frameNumber = frameNumber - (_remainder * plugin.playhead.script.length);
                 frameNumber = (plugin.playhead.script.length - 1) + frameNumber;
             }
-
+            
             // Draw frame
             plugin.playhead.currentFrame = frameNumber;
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
@@ -176,11 +175,6 @@
                 if (plugin.playhead.script.length === 0) {
                     _autoScript();
                 }
-
-                // Reverse the script?
-                if (plugin.playhead.reversed) {
-                    plugin.playhead.script.reverse();
-                }
                 
                 // Enter the animation loop
                 if (plugin.playhead.run !== 0) {
@@ -194,9 +188,12 @@
             }
 
             // onPlay callback
-            if (typeof plugin.playhead.onPlay == 'function') {
-                plugin.playhead.onPlay.call();
-            }
+            //if (typeof plugin.playhead.onPlay == 'function') {
+            //    plugin.playhead.onPlay.call($element.data('spriteAnimator'));
+            //}
+            
+            // Trigger: started
+            $element.trigger('started');
         };
 
         /**
@@ -208,9 +205,12 @@
             plugin.playhead.play = false;
 
             // onPause callback
-            if (typeof plugin.playhead.onPause == 'function') {
-                plugin.playhead.onPause.call();
-            }
+            //if (typeof plugin.playhead.onPause == 'function') {
+            //    plugin.playhead.onPause.call($element.data('spriteAnimator'));
+            //}
+            
+            // Trigger: paused
+            $element.trigger('paused');
         };
         
         /**
@@ -228,9 +228,26 @@
             plugin.reset();
             
             // onStop callback
-            if (typeof plugin.playhead.onStop == 'function') {
-                plugin.playhead.onStop.call();
-            }
+            //if (typeof plugin.playhead.onStop == 'function') {
+            //    plugin.playhead.onStop.call($element.data('spriteAnimator'));
+            //}
+
+            // Trigger: stopped
+            $element.trigger('stopped');
+        };
+
+        /**
+         * Reverse direction of play
+         */
+        plugin.reverse = function() {
+            plugin.playhead.reversed = !plugin.playhead.reversed;
+        };
+
+        /**
+         * Set a new tempo for the animation
+         */
+        plugin.setTempo = function(tempo) {
+            plugin.playhead.tempo = tempo;
         };
         
         /**
@@ -262,6 +279,8 @@
                 if (plugin.globals.loaded) { return; }
                 plugin.globals.loaded = true;
 
+                _log('Loaded: ' + plugin.globals.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
+                
                 plugin.globals.sheetWidth = _preload.width;
                 plugin.globals.sheetHeight = _preload.height;
                 plugin.globals.frameWidth = parseInt(plugin.globals.sheetWidth / plugin.globals.cols, 10);
@@ -305,9 +324,29 @@
                     }
                 }
                 
-                // Bind stop event
-                $element.off('stop').on('stop', function(){
+                // Bind events
+                $element.off('stop pause play reverse nextFrame previousFrame goToFrame');
+                $element.on('stop', function(){
                     plugin.stop();
+                });
+                $element.on('pause', function(){
+                    plugin.pause();
+                });
+                $element.on('play', function(event, options){
+                    console.log(options);
+                    plugin.play(options);
+                });
+                $element.on('reverse', function(){
+                    plugin.reverse();
+                });
+                $element.on('nextFrame', function(){
+                    plugin.nextFrame();
+                });
+                $element.on('previousFrame', function(){
+                    plugin.previousFrame();
+                });
+                $element.on('goToFrame', function(event, options){
+                    plugin.goToFrame(options);
                 });
 
                 // Auto script if not yet set
@@ -315,17 +354,18 @@
                     _autoScript();
                 }
                 
-                // onLoaded callback
-                if (typeof plugin.globals.onLoaded == 'function') {
-                    plugin.globals.onLoaded.call();
-                }
-                
                 // Start frame?
                 if (plugin.globals.startFrame) {
                     plugin.goToFrame(plugin.globals.startFrame);
                 }
                 
-                _log('Loaded: ' + plugin.globals.url + ', sprites ' + plugin.globals.sheetCols + ' x ' + plugin.globals.sheetRows);
+                // onLoaded callback
+                //if (typeof plugin.globals.onLoaded == 'function') {
+                //    plugin.globals.onLoaded.call($element.data('spriteAnimator'));
+                //}
+
+                // Trigger: loaded
+                $element.trigger('loaded');
             });
         };
 
@@ -354,8 +394,14 @@
                             if ($element.filter(':visible') && _inViewport($element)) {
                                 var frame = plugin.playhead.script[plugin.playhead.currentFrame];
                                 plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
+                                plugin.playhead.nextDelay /= plugin.playhead.tempo;
                                 plugin.playhead.lastTime = time;
-                                plugin.nextFrame();
+
+                                if (plugin.playhead.reversed) {
+                                    plugin.previousFrame();
+                                } else {
+                                    plugin.nextFrame();
+                                }
                             } else {
                                 if (plugin.playhead.outOfViewStop) {
                                     plugin.stop();
@@ -378,6 +424,9 @@
          */
         var _drawFrame = function( frame ) {
             if (frame.sprite === plugin.playhead.currentSprite) { return false; }
+
+            // Trigger: frame
+            $element.trigger('frame');
             
             var row = Math.ceil(frame.sprite / plugin.globals.sheetCols);
             var col = frame.sprite - ((row - 1) * plugin.globals.sheetCols);
@@ -414,7 +463,7 @@
             elems.on('load.imgloaded', function(){
                 if (--len <= 0 && this.src !== blank){ 
                     elems.off('load.imgloaded');
-                    _callback.call(elems,this); 
+                    _callback.call(elems, this); 
                 }
             }).each(function(){
                 // cached images don't fire load sometimes, so we reset src.
