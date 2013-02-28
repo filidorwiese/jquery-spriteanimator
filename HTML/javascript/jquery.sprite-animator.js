@@ -8,9 +8,11 @@
 
 // TODO:
 //      - .tweenFromTo met easing
-//      - start paused
-//      - addAnimation
-//      - globalDelay
+//      - .addAnimation()?
+//      - global playback speed setting?
+//      - run defineren by play()?
+//      - .goToFrame direct na init
+//      - play direction reversed?
 
 (function($) {
     $.spriteAnimator = function(element, options) {
@@ -39,7 +41,6 @@
         
         var anim = {
             play: true,
-            pause: false,
             delay: 50,
             run: 1,
             reversed: false,
@@ -107,9 +108,6 @@
             if (plugin.playhead.currentFrame >= plugin.playhead.script.length) {
                 plugin.playhead.currentFrame = 0;
                 plugin.playhead.run -= 1;
-                //if (plugin.playhead.run === 0) {
-                //    plugin.playhead.play = false;
-                //}
             }
             
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
@@ -128,9 +126,6 @@
             if (plugin.playhead.currentFrame < 0) {
                 plugin.playhead.currentFrame = plugin.playhead.script.length - 1;
                 plugin.playhead.run -= 1;
-                //if (plugin.playhead.run === 0) {
-                //    plugin.playhead.play = false;
-                //}
             }
             
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
@@ -143,28 +138,22 @@
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.globals.loaded) { return false; }
 
-            // TODO: round framenumber
+            // floor framenumber
+            frameNumber = Math.floor(frameNumber);
             
             // Make sure given framenumber is within the animation
             if (frameNumber >= 0) {
-                if (frameNumber > plugin.playhead.script.length) {
-                    var _remainder = parseInt(frameNumber / plugin.playhead.script.length, 0);
+                if (frameNumber > (plugin.playhead.script.length - 1)) {
+                    var _remainder = parseInt(frameNumber / (plugin.playhead.script.length - 1), 0);
                     frameNumber = frameNumber - (_remainder * plugin.playhead.script.length);
                 }
             } else {
                 // Negative numbers should be counted from the rear
-                frameNumber = plugin.playhead.script.length + frameNumber;
+                var _remainder = parseInt(frameNumber / (plugin.playhead.script.length - 1), 0);
+                frameNumber = frameNumber - (_remainder * plugin.playhead.script.length);
+                frameNumber = (plugin.playhead.script.length - 1) + frameNumber;
             }
-            _log(frameNumber);
 
-            // FIXME:
-            // Still negative frameNumber? Do nothing.
-            if (frameNumber < 0) {
-                return false;
-            }
-            
-            //
-            
             // Draw frame
             plugin.playhead.currentFrame = frameNumber;
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
@@ -194,12 +183,14 @@
                 }
                 
                 // Enter the animation loop
-                //if (plugin.playhead.run !== 0) {
+                if (plugin.playhead.run !== 0) {
                     _loop();
-                //}
+                }
             } else {
-                plugin.playhead.play = !plugin.playhead.play;
-                console.log(plugin.playhead.play);
+                if (!plugin.playhead.play) {
+                    plugin.playhead.play = true;
+                    _loop();
+                }
             }
 
             // onPlay callback
@@ -214,7 +205,6 @@
         plugin.pause = function() {
             if (!plugin.playhead.play) { return false; }
             
-            _log('Pause called');
             plugin.playhead.play = false;
 
             // onPause callback
@@ -227,7 +217,6 @@
          * Reset playhead to first frame
          */
         plugin.reset = function() {
-            _log('Reset called');
             plugin.goToFrame(0);
         };
         
@@ -238,10 +227,6 @@
             plugin.playhead.play = false;
             plugin.reset();
             
-            if (typeof requestFrameId != 'undefined') {
-                window.cancelAnimationFrame(requestFrameId);
-            }
-
             // onStop callback
             if (typeof plugin.playhead.onStop == 'function') {
                 plugin.playhead.onStop.call();
@@ -350,6 +335,7 @@
         var _loop = function(time) {
             // Should be called as soon as possible
             var requestFrameId = window.requestAnimationFrame( _loop );
+            
             //console.log(requestFrameId);
             
             // Wait until fully loaded
@@ -372,14 +358,17 @@
                                 plugin.nextFrame();
                             } else {
                                 if (plugin.playhead.outOfViewStop) {
-                                    plugin.stop(requestFrameId);
+                                    plugin.stop();
                                 }
                             }
                         } else {
-                            plugin.stop(requestFrameId);
+                            plugin.stop();
                         }
-                        
                     }
+                    
+                } else {
+                    // Cancel animation loop if play = false
+                    window.cancelAnimationFrame(requestFrameId);
                 }
             }
         };
