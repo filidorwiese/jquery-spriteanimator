@@ -30,39 +30,34 @@
 <script>
     
     var sprite = $('#sprite');
-    var spriteData = sprite.spriteAnimator({
+    sprite.spriteAnimator({
         debug: true,
         top: 200,
         left: 100,
         cols: 3,
-        rows: 9,
-        startFrame: 15
-    }).play({
-        play: false,
+        rows: 9
+    });
+
+    sprite.trigger('play', {
+        play: true,
         run: -1,
         delay: 200,
         reversed: false,
         tempo: 1
     });
-    
+
+    /*
     sprite.on('loaded', function(){
-        //console.log($(this));
         $(this).trigger('goToFrame', 26);
-    });
+    });*/
     
     sprite.on('frame', function(){
-        console.log('.');
+        //console.log('.');
     });
     
     $('button#play').on('click', function(event){
         event.preventDefault();
-        sprite.trigger('play', {
-            play: true,
-            run: -1,
-            delay: 400,
-            reversed: true,
-            tempo: 1
-        });
+        sprite.trigger('play');
     });
     
     $('button#pause').on('click', function(event){
@@ -77,35 +72,34 @@
 
     $('button#reset').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').reset();
+        sprite.trigger('reset');
     });
 
     $('button#nextFrame').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').nextFrame();
+        sprite.trigger('nextFrame');
     });
     
     $('button#previousFrame').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').previousFrame();
+        sprite.trigger('previousFrame');
     });
 
     $('button#reverse').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').reverse();
+        sprite.trigger('reverse');
     });
 
     $('button#goToFrame').on('click', function(event){
         event.preventDefault();
         var frameNumber = $('input#framenumber').val() || 0;
-        //sprite.data('spriteAnimator').goToFrame(frameNumber);
         sprite.trigger('goToFrame', frameNumber);
     });
 
     $('button#setTempo').on('click', function(event){
         event.preventDefault();
         var tempo = $('input#tempo').val() || 1;
-        sprite.data('spriteAnimator').setTempo(tempo);
+        sprite.trigger('setTempo', tempo);
     });
     
     
