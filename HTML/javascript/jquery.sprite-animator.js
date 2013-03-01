@@ -56,6 +56,8 @@
             script: [],
             lastTime: 0,
             nextDelay: 0,
+            currentFrame: -1,
+            currentSprite: 1,
             onPlay: null,
             onStop: null,
             onFrame: null
@@ -68,9 +70,7 @@
             sheetHeight: 0,
             frameWidth: 0,
             frameHeight: 0,
-            animations: {},
-            currentFrame: -1,
-            currentSprite: 1
+            animations: {}
         };
         
         plugin.globals = {};
@@ -104,14 +104,14 @@
          * Get the current frameNumber from script
          */
         plugin.currentFrame = function() {
-            return plugin.internal.currentFrame;
+            return plugin.playhead.currentFrame;
         };
 
         /**
          * Get the current spriteNumber that is shown
          */
         plugin.currentSprite = function() {
-            return plugin.internal.currentSprite;
+            return plugin.playhead.currentSprite;
         };
         
         /**
@@ -121,15 +121,15 @@
             if (!plugin.internal.loaded) { return false; }
 
             // Update counter
-            plugin.internal.currentFrame += 1;
-            if (plugin.internal.currentFrame > (plugin.playhead.script.length - 1)) {
-                plugin.internal.currentFrame = 0;
+            plugin.playhead.currentFrame += 1;
+            if (plugin.playhead.currentFrame > (plugin.playhead.script.length - 1)) {
+                plugin.playhead.currentFrame = 0;
             }
-            if (plugin.internal.currentFrame == plugin.playhead.script.length - 1) {
+            if (plugin.playhead.currentFrame == plugin.playhead.script.length - 1) {
                 plugin.playhead.run -= 1;
             }
 
-            var frame = plugin.playhead.script[plugin.internal.currentFrame];
+            var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             _drawFrame(frame);
         };
         $element.off('nextFrame').on('nextFrame', function(){
@@ -143,15 +143,15 @@
             if (!plugin.internal.loaded) { return false; }
 
             // Update counter
-            plugin.internal.currentFrame -= 1;
-            if (plugin.internal.currentFrame < 0) {
-                plugin.internal.currentFrame = (plugin.playhead.script.length - 1);
+            plugin.playhead.currentFrame -= 1;
+            if (plugin.playhead.currentFrame < 0) {
+                plugin.playhead.currentFrame = (plugin.playhead.script.length - 1);
             }
-            if (plugin.internal.currentFrame == 0) {
+            if (plugin.playhead.currentFrame == 0) {
                 plugin.playhead.run -= 1;
             }
             
-            var frame = plugin.playhead.script[plugin.internal.currentFrame];
+            var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             _drawFrame(frame);
         };
         $element.off('previousFrame').on('previousFrame', function(){
@@ -181,8 +181,8 @@
             }
             
             // Draw frame
-            plugin.internal.currentFrame = frameNumber;
-            var frame = plugin.playhead.script[plugin.internal.currentFrame];
+            plugin.playhead.currentFrame = frameNumber;
+            var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             if (frame !== undefined) {
                 _drawFrame(frame);
             }
@@ -218,43 +218,37 @@
         
         /**
          * Define a new animation sequence or resume if not playing
-         * @param1: if param1 is a string we assume a predefined animation should be set
-         *          if param1 is an object, most likely a new animation sequence has been given
-         *          if neither, we resume the animation or start the 'all' built-in animation sequence
-         * @param2: object with animation settings, the following are allowed
-         *          - play: start playing the animation right away (default: true)
-         *          - run: the number of times the animation should run, -1 is infinite (default: 1)
-         *          - delay: default delay for all frames that don't have a delay set (default: 50)
-         *          - tempo: timescale for all delays, double-speed = 2, half-speed = .5 (default:1)
-         *          - reversed: direction of the animation head, true == backwards (default: false)
-         *          - outOfViewStop: stop animation if placeholder is no longer in view (default: false)
-         *          - script: animation sequence, see .addScript for details (default: [])
-         *          - onPlay/onStop/onFram: callbacks called at the appropriate times (default: null)
+         * @animationObject:
+         *          if object with animation settings, the following are allowed
+         *              - play: start playing the animation right away (default: true)
+         *              - run: the number of times the animation should run, -1 is infinite (default: 1)
+         *              - delay: default delay for all frames that don't have a delay set (default: 50)
+         *              - tempo: timescale for all delays, double-speed = 2, half-speed = .5 (default:1)
+         *              - reversed: direction of the animation head, true == backwards (default: false)
+         *              - outOfViewStop: stop animation if placeholder is no longer in view (default: false)
+         *              - script: new animation array or string (in which case animation sequence is looked up)
+         *              - onPlay/onStop/onFrame: callbacks called at the appropriate times (default: null)
+         *          if not set, we resume the current animation or start the 'all' built-in animation sequence
          */
-        plugin.play = function(param1, param2) {
+        plugin.play = function(animationObject) {
             // Not yet loaded, wait...
             if (!plugin.internal.loaded) {
-                setTimeout(function(){ plugin.play(param1, param2); }, 50);
+                setTimeout(function(){ plugin.play(animationObject); }, 50);
                 return false;
             }
-            
-            if (typeof param1 == 'string') {
-                var animation = plugin.internal.animations[param1];
-                if (typeof animation == 'undefined') {
-                    throw 'spriteAnimator: "' + param1 + '" animation hasn\'t been defined';
-                }
-                playhead = param2 || {};
-                playhead.script = animation;
-                plugin.playhead = $.extend({}, animationDefaults, playhead);
 
-            } else if (typeof param1 == 'object') {
-                plugin.playhead = $.extend({}, plugin.playhead, param1);
-                
+            if (typeof animationObject == 'object') {
+                if (typeof animationObject.script == 'string') { // Resolve to stored animation sequence
+                    animationObject.script = plugin.internal.animations[animationObject.script];
+                }
+                if (typeof animationObject.script == 'undefined') {
+                    throw 'spriteAnimator: no animation sequence found';
+                }
+                plugin.playhead = $.extend({}, animationDefaults, animationObject);
             } else {
-                if (typeof playhead == 'undefined') {
-                    var animation = plugin.internal.animations['all'];
-                    playhead = { script: animation };
-                    plugin.playhead = $.extend({}, animationDefaults, playhead);
+                if (typeof plugin.playhead.script == 'undefined') {
+                    animationObject = { script: plugin.internal.animations['all'] };
+                    plugin.playhead = $.extend({}, animationDefaults, animationObject);
                 }
                 if (!plugin.playhead.play) {
                     if (plugin.playhead.run === 0) { plugin.playhead.run = 1; }
@@ -444,12 +438,12 @@
                                     plugin.nextFrame();
                                 }
 
-                                var frame = plugin.playhead.script[plugin.internal.currentFrame];
+                                var frame = plugin.playhead.script[plugin.playhead.currentFrame];
                                 plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
                                 plugin.playhead.nextDelay /= plugin.playhead.tempo;
                                 plugin.playhead.lastTime = time;
                                 
-                                _log('frame: ' + plugin.internal.currentFrame + ', sprite: ' + frame.sprite + ', delay: ' + plugin.playhead.nextDelay + ', run: ' + plugin.playhead.run);
+                                _log('frame: ' + plugin.playhead.currentFrame + ', sprite: ' + frame.sprite + ', delay: ' + plugin.playhead.nextDelay + ', run: ' + plugin.playhead.run);
                             }
                             
                         } else {
@@ -471,8 +465,8 @@
          * Draw a single frame
          */
         var _drawFrame = function( frame ) {
-            if (frame.sprite === plugin.internal.currentSprite) { return false; }
-            plugin.internal.currentSprite = frame.sprite;
+            if (frame.sprite === plugin.playhead.currentSprite) { return false; }
+            plugin.playhead.currentSprite = frame.sprite;
             
             var row = Math.ceil(frame.sprite / plugin.globals.cols);
             var col = frame.sprite - ((row - 1) * plugin.globals.cols);

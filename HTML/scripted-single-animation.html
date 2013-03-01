@@ -27,7 +27,6 @@
 <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript" src="javascript/jquery.sprite-animator.js"></script>
 <script>
-    
     var sprite = $('#sprite');
     var spriteAnimator = sprite.spriteAnimator({
         debug: true,
@@ -37,7 +36,7 @@
         rows: 3
     });
     spriteAnimator.addScript('lezen', [
-        {sprite: 1}, // regels lezen
+        {sprite: 1, delay: 8000}, // regels lezen
         {sprite: 2, delay: 800},
         {sprite: 1},
         {sprite: 3, delay: 400},
@@ -63,7 +62,7 @@
         {sprite: 12}
     ]);
 
-    spriteAnimator.play({run: -1, delay: 200, script: 'lezen'});
+    spriteAnimator.play({run: 1, delay: 200, script: 'lezen'});
     //spriteAnimator.play({run: -1, delay: 200, script: 'all'});
     /*
     sprite.trigger('play', {
