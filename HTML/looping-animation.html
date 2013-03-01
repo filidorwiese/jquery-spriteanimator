@@ -13,7 +13,6 @@
 
 <p>
     <button id="play">play</button>
-    <button id="pause">pause</button>
     <button id="stop">stop</button>
     <button id="reset">reset</button>
     <button id="nextFrame">nextFrame</button>
@@ -35,15 +34,16 @@
         top: 200,
         left: 100,
         cols: 3,
-        rows: 9
+        rows: 9,
+        startSprite: 2
     });
 
     sprite.trigger('play', {
         play: true,
-        run: -1,
+        run: 1,
         delay: 200,
         reversed: false,
-        tempo: 1
+        tempo: 10
     });
 
     /*
@@ -58,11 +58,6 @@
     $('button#play').on('click', function(event){
         event.preventDefault();
         sprite.trigger('play');
-    });
-    
-    $('button#pause').on('click', function(event){
-        event.preventDefault();
-        sprite.trigger('pause');
     });
 
     $('button#stop').on('click', function(event){

@@ -8,7 +8,6 @@
 </head>
 
 <body>
-    
 
 <div id="ossy-sprite" style="background-image:url(sprites/hosting-home__ossy-sprite.png)"></div>
 
@@ -24,8 +23,7 @@
         bottom: 200,
         left: 100,
         cols: 6,
-        rows: 4,
-        startSprite: 10
+        rows: 4
     });
 
     ossySprite.on('pootje', function(){
@@ -38,16 +36,16 @@
                 {sprite:23, delay:100},
                 {sprite:24, delay:3000},
                 {sprite:23, delay:100}
-            ]/*,
+            ],
             onStop: function(){
                 new Log('Ossy: done pootje');
                 ossySprite.trigger('knipperen');
-            }*/
+            }
         });
-        ossySprite.off('stopped').on('stopped', function(){
+        /*ossySprite.off('stopped').on('stopped', function(){
             new Log('Ossy: done pootje');
             ossySprite.trigger('knipperen');
-        });
+        });*/
     });
 
     ossySprite.on('kwispelen', function(){
@@ -72,16 +70,16 @@
                 {sprite:12},
                 {sprite:11},
                 {sprite:10}
-            ]/*,
+            ],
             onStop: function(){
                 new Log('Ossy: done kwispelen');
                 ossySprite.trigger('knipperen');
-            }*/
+            }
         });
-        ossySprite.off('stopped').on('stopped', function(){
+        /*ossySprite.off('stopped').on('stopped', function(){
             new Log('Ossy: done kwispelen');
             ossySprite.trigger('knipperen');
-        });
+        });*/
     });
     
     ossySprite.on('liggen', function(){
@@ -100,22 +98,22 @@
                 {sprite: 3},
                 {sprite: 2, delay:3000},
                 {sprite: 1}
-            ]/*,
+            ],
             onStop: function(){
                 new Log('Ossy: done liggen');
                 ossySprite.on('mousemove', function(event){
                     $(this).off('mousemove');
                     ossySprite.trigger('staan');
                 });
-            }*/
+            }
         });
-        ossySprite.off('stopped').on('stopped', function(){
+        /*ossySprite.off('stopped').on('stopped', function(){
             new Log('Ossy: done liggen');
             ossySprite.on('mousemove', function(event){
                 $(this).off('mousemove');
                 ossySprite.trigger('staan');
             });
-        });
+        });*/
     });
 
     ossySprite.on('staan', function(){
@@ -135,17 +133,17 @@
                 {sprite: 7},
                 {sprite: 8},
                 {sprite: 9},
-                {sprite: 10}
-            ]/*,
+                {sprite: 10, delay:1000}
+            ],
             onStop: function(){
                 new Log('Ossy: done staan');
                 ossySprite.trigger('knipperen');
-            }*/
+            }
         });
-        ossySprite.off('stopped').on('stopped', function(){
+        /*ossySprite.off('stopped').on('stopped', function(){
             new Log('Ossy: done staan');
             ossySprite.trigger('knipperen');
-        });
+        });*/
     });
 
     ossySprite.on('omkijken', function(){
@@ -167,16 +165,16 @@
                 {sprite: 19},
                 {sprite: 18},
                 {sprite: 10}
-            ]/*,
+            ],
             onStop: function(){
                 new Log('Ossy: done omkijken');
                 ossySprite.trigger('knipperen');
-            }*/
+            }
         });
-        ossySprite.off('stopped').on('stopped', function(){
+        /*ossySprite.off('stopped').on('stopped', function(){
             new Log('Ossy: done omkijken');
             ossySprite.trigger('knipperen');
-        });
+        });*/
     });
 
     ossySprite.on('knipperen', function(){
@@ -187,17 +185,18 @@
             script: [
                 {sprite:10, delay:5000},
                 {sprite:15, delay:350}
-            ]/*,
+            ],
             onStop: function(){
                 new Log('Ossy: done knipperen');
                 ossySprite.trigger(idleVariants[randomize(0, (idleVariants.length-1))]);
-            }*/
+            }
         });
-        ossySprite.off('stopped').on('stopped', function(){
+        /*ossySprite.off('stopped').on('stopped', function(){
             new Log('Ossy: done knipperen');
             ossySprite.trigger(idleVariants[randomize(0, (idleVariants.length-1))]);
-        });
+        });*/
     });
+    ossySprite.trigger('knipperen');
     
     // On click/touch trigger pootje anim
     ossySprite.on('touchstart click', function(event){
@@ -211,31 +210,25 @@
     var visibilityState, visibilityChange; 
     if (typeof document.hidden !== 'undefined') {
         visibilityChange = 'visibilitychange';
-        visibilityState = document.hidden;
+        visibilityState = 'hidden';
     } else if (typeof document.mozHidden !== 'undefined') {
         visibilityChange = 'mozvisibilitychange';
-        visibilityState = document.mozHidden;
+        visibilityState = 'mozHidden';
     } else if (typeof document.msHidden !== 'undefined') {
         visibilityChange = 'msvisibilitychange';
-        visibilityState = document.msHidden;
+        visibilityState = 'msHidden';
     } else if (typeof document.webkitHidden !== 'undefined') {
         visibilityChange = 'webkitvisibilitychange';
-        visibilityState = document.webkitHidden;
+        visibilityState = 'webkitHidden';
     }
     $(document).on(visibilityChange, function(event){
-        if (visibilityState) {
-            ossySprite.trigger('pause');
-            /*ossySprite.trigger('play', {
-                play: true,
-                run: 1,
-                script: [ {sprite: 1} ]
-            });*/
+        if (document[visibilityState]) {
+            ossySprite.trigger('goToSprite', 1);
         } else {
-            //ossySprite.trigger('staan');
+            ossySprite.trigger('staan');
         }
     });
     
-    ossySprite.trigger('knipperen');
 
 
 

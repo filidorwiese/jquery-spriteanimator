@@ -13,7 +13,6 @@
 
 <p>
     <button id="play">play</button>
-    <button id="pause">pause</button>
     <button id="stop">stop</button>
     <button id="reset">reset</button>
     <button id="nextFrame">nextFrame</button>
@@ -73,11 +72,6 @@
     $('button#play').on('click', function(event){
         event.preventDefault();
         sprite.data('spriteAnimator').play();
-    });
-    
-    $('button#pause').on('click', function(event){
-        event.preventDefault();
-        sprite.data('spriteAnimator').pause();
     });
 
     $('button#stop').on('click', function(event){
