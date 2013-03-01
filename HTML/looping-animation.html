@@ -29,31 +29,13 @@
 <script>
     
     var sprite = $('#sprite');
-    sprite.spriteAnimator({
+    var spriteAnimator = sprite.spriteAnimator({
         debug: true,
         top: 200,
         left: 100,
         cols: 3,
-        rows: 9,
-        startSprite: 2
-    });
-
-    sprite.trigger('play', {
-        play: true,
-        run: 1,
-        delay: 200,
-        reversed: false,
-        tempo: 10
-    });
-
-    /*
-    sprite.on('loaded', function(){
-        $(this).trigger('goToFrame', 26);
-    });*/
-    
-    sprite.on('frame', function(){
-        //console.log('.');
-    });
+        rows: 9
+    }).play('all', {run: -1, delay: 100});
     
     $('button#play').on('click', function(event){
         event.preventDefault();

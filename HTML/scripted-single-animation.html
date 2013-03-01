@@ -29,86 +29,91 @@
 <script>
     
     var sprite = $('#sprite');
-    var spriteData = sprite.spriteAnimator({
+    var spriteAnimator = sprite.spriteAnimator({
         debug: true,
         top: 200,
         left: 100,
         cols: 5,
         rows: 3
-    }).play({
-        run: 2,
-        delay: 200,
-        script: [
-            {sprite: 1}, // regels lezen
-            {sprite: 2, delay: 800},
-            {sprite: 1},
-            {sprite: 3, delay: 400},
-            {sprite: 1}, // regels lezen
-            {sprite: 2, delay: 800},
-            {sprite: 1},
-            {sprite: 3, delay: 400},
-            {sprite: 1}, // regels lezen
-            {sprite: 2, delay: 400},
-            {sprite: 1},
-            {sprite: 3, delay: 800},
-            {sprite: 1}, // ogen knipperen
-            {sprite: 4},
-            {sprite: 1},
-            
-            {sprite: 5}, // bladzijde omslaan
-            {sprite: 6},
-            {sprite: 7},
-            {sprite: 8},
-            {sprite: 9},
-            {sprite: 10},
-            {sprite: 11},
-            {sprite: 12}
-        ],
-        onStop: function(){
-            console.log('onStop callback called');
-        }
     });
+    spriteAnimator.addScript('lezen', [
+        {sprite: 1}, // regels lezen
+        {sprite: 2, delay: 800},
+        {sprite: 1},
+        {sprite: 3, delay: 400},
+        {sprite: 1}, // regels lezen
+        {sprite: 2, delay: 800},
+        {sprite: 1},
+        {sprite: 3, delay: 400},
+        {sprite: 1}, // regels lezen
+        {sprite: 2, delay: 400},
+        {sprite: 1},
+        {sprite: 3, delay: 800},
+        {sprite: 1}, // ogen knipperen
+        {sprite: 4},
+        {sprite: 1},
+        
+        {sprite: 5}, // bladzijde omslaan
+        {sprite: 6},
+        {sprite: 7},
+        {sprite: 8},
+        {sprite: 9},
+        {sprite: 10},
+        {sprite: 11},
+        {sprite: 12}
+    ]);
+
+    spriteAnimator.play({run: -1, delay: 200, script: 'lezen'});
+    //spriteAnimator.play({run: -1, delay: 200, script: 'all'});
+    /*
+    sprite.trigger('play', {
+        run: -1,
+        delay: 200,
+        script: 'lezen',
+        onStop: function(){ console.log('stopped'); }
+    });
+    */
     
     $('button#play').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').play();
+        spriteAnimator.play();
     });
 
     $('button#stop').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').stop();
+        spriteAnimator.stop();
     });
 
     $('button#reset').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').reset();
+        spriteAnimator.reset();
     });
 
     $('button#nextFrame').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').nextFrame();
+        sprite.trigger('nextFrame');
     });
     
     $('button#previousFrame').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').previousFrame();
+        spriteAnimator.previousFrame();
     });
 
     $('button#reverse').on('click', function(event){
         event.preventDefault();
-        sprite.data('spriteAnimator').reverse();
+        spriteAnimator.reverse();
     });
 
     $('button#goToFrame').on('click', function(event){
         event.preventDefault();
         var frameNumber = $('input#framenumber').val() || 0;
-        sprite.data('spriteAnimator').goToFrame(frameNumber);
+        spriteAnimator.goToFrame(frameNumber);
     });
 
     $('button#setTempo').on('click', function(event){
         event.preventDefault();
         var tempo = $('input#tempo').val() || 1;
-        sprite.data('spriteAnimator').setTempo(tempo);
+        spriteAnimator.setTempo(tempo);
     });
     
 </script>
