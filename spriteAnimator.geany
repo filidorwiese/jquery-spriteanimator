@@ -17,11 +17,10 @@ long_line_behaviour=1
 long_line_column=72
 
 [files]
-current_page=1
-FILE_NAME_0=16877;Javascript;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/javascript/jquery.sprite-animator.js;0;4
-FILE_NAME_1=124;HTML;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/ossy.html;0;4
-FILE_NAME_2=1176;HTML;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/looping-animation.html;0;4
-FILE_NAME_3=0;HTML;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/scripted-single-animation.html;0;4
+current_page=0
+FILE_NAME_0=1565;Javascript;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/javascript/jquery.sprite-animator.js;0;4
+FILE_NAME_1=1645;HTML;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/ossy.html;0;4
+FILE_NAME_2=920;HTML;0;16;0;1;0;/home/fili/Project/spriteAnimator/HTML/scripted-single-animation.html;0;4
 
 [VTE]
 last_dir=/home/fili/Project/heinekeninternational.com

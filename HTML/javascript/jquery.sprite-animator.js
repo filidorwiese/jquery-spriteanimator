@@ -1,5 +1,5 @@
 /*!
- * jQuery spriteAnimator (revision 2013/03/01)
+ * jQuery spriteAnimator (revision 2013/03/04)
  * http://fili.nl
  * 
  * Copyright (c) Filidor Wiese, ONI
@@ -10,7 +10,7 @@
 //      - .tweenFromTo met easing
 //      - keep or remove triggers?
 //      - crossbrowser
-//      - 
+//      - previousFrame/nextFrame logging?
 
 (function($) {
     
@@ -164,26 +164,15 @@
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.internal.loaded) { return false; }
             
-            // floor framenumber
-            frameNumber = Math.floor(frameNumber);
-            
             // Make sure given framenumber is within the animation
-            if (frameNumber >= 0) {
-                if (frameNumber > (plugin.playhead.script.length - 1)) {
-                    var _remainder = parseInt(frameNumber / (plugin.playhead.script.length - 1), 0);
-                    frameNumber = frameNumber - (_remainder * plugin.playhead.script.length);
-                }
-            } else {
-                // Negative numbers should be counted from the rear
-                var _remainder = parseInt(frameNumber / (plugin.playhead.script.length - 1), 0);
-                frameNumber = frameNumber - (_remainder * plugin.playhead.script.length);
-                frameNumber = (plugin.playhead.script.length - 1) + frameNumber;
-            }
+            var _baseNumber = Math.floor(frameNumber / plugin.playhead.script.length);
+            frameNumber = Math.floor(frameNumber - (_baseNumber * plugin.playhead.script.length));
             
             // Draw frame
             plugin.playhead.currentFrame = frameNumber;
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             if (frame !== undefined) {
+                _log('frame: ' + plugin.playhead.currentFrame + ', sprite: ' + frame.sprite);
                 _drawFrame(frame);
             }
         };
@@ -194,12 +183,12 @@
         /**
          * Show certain sprite (circumvents the current animation sequence)
          */
-        plugin.goToSprite = function(spriteNumber) {
+        plugin.showSprite = function(spriteNumber) {
             plugin.playhead.play = false;
             _drawFrame({ sprite: spriteNumber });
         };
-        $element.off('goToSprite').on('goToSprite', function(event, param1){
-            plugin.goToSprite(param1);
+        $element.off('showSprite').on('showSprite', function(event, param1){
+            plugin.showSprite(param1);
         });
 
         /**
@@ -242,14 +231,10 @@
                     animationObject.script = plugin.internal.animations[animationObject.script];
                 }
                 if (typeof animationObject.script == 'undefined') {
-                    throw 'spriteAnimator: no animation sequence found';
+                    animationObject.script = plugin.internal.animations['all'];
                 }
                 plugin.playhead = $.extend({}, animationDefaults, animationObject);
             } else {
-                if (typeof plugin.playhead.script == 'undefined') {
-                    animationObject = { script: plugin.internal.animations['all'] };
-                    plugin.playhead = $.extend({}, animationDefaults, animationObject);
-                }
                 if (!plugin.playhead.play) {
                     if (plugin.playhead.run === 0) { plugin.playhead.run = 1; }
                     plugin.playhead.play = true;
@@ -388,12 +373,14 @@
                     }
                 }
 
-                // Auto script the first 'all' animation sequence
+                // Auto script the first 'all' animation sequence and make it default
                 _autoScript();
+                animationObject = { script: plugin.internal.animations['all'] };
+                plugin.playhead = $.extend({}, animationDefaults, animationObject);
                 
                 // Starting sprite?
                 if (plugin.globals.startSprite > 1 && plugin.globals.startSprite <= plugin.internal.totalSprites) {
-                    plugin.goToSprite(plugin.globals.startSprite);
+                    plugin.showSprite(plugin.globals.startSprite);
                 }
                 
                 // onLoaded callback
