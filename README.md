@@ -1,6 +1,13 @@
 # Jquery spriteAnimator plugin
 
-For a working example, see http://galaxy.fili.nl
+Create fancy sprite animations with this jQuery plugin
+
+Examples:
+* [Looping animation](http://www.fili.nl/jquery-spriteanimator-examples/looping-animation-arcade.html)
+* [Scripted animation 1](http://www.fili.nl/jquery-spriteanimator-examples/scripted-animation-ossy.html)
+* [Scripted animation 2](http://www.fili.nl/jquery-spriteanimator-examples/scripted-animation-reading.html)
+
+Also check out https://galaxy.fili.nl, an animating website fully based on this library. The source for it can be found [here](https://github.com/filidorwiese/galaxy.fili.nl)
 
 ## License ##
 

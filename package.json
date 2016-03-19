@@ -1,7 +1,7 @@
 {
   "name": "jquery-spriteanimator",
   "version": "1.0.0",
-  "description": "Create sprite animations with this jQuery plugin",
+  "description": "Create fancy sprite animations with this jQuery plugin",
   "main": "jquery.sprite-animator.js",
   "dependencies": {},
   "devDependencies": {
@@ -22,6 +22,5 @@
     "animation"
   ],
   "author": "Filidor Wiese",
-  "license": "CC-BY-NC-4.0",
-  "homepage": "https://bitbucket.org/filiw/jquery-spriteanimator-plugin#readme"
+  "license": "CC-BY-NC-4.0"
 }
