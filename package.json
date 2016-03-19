@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "preversion": "mkdir -p dist; ./node_modules/uglify-js/bin/uglifyjs src/jquery.sprite-animator.js > ./dist/jquery.sprite-animator.min.js",
+    "build": "mkdir -p dist; ./node_modules/uglify-js/bin/uglifyjs src/jquery.sprite-animator.js > ./dist/jquery.sprite-animator.min.js",
+    "preversion": "npm run build",
     "postversion": "git push && git push --tags"
   },
   "repository": {
