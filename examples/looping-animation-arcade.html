@@ -1,7 +1,14 @@
 <!DOCTYPE html>
-<html class="nl" lang="nl" dir="ltr">
+<html dir="ltr">
 <head>
-<meta charset="UTF-8" />
+    <meta charset="UTF-8" />
+    <script type="text/javascript" src="../node_modules/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="../src/jquery.sprite-animator.js"></script>
+    <style>
+        #sprite {
+            background-image:url(sprites/arcade.png);
+        }
+    </style>
 <style>
 
 </style>
@@ -9,7 +16,7 @@
 
 <body>
 
-<div id="sprite" style="background-image:url(sprites/pxlfili_arcade_S.png)"></div>
+<div id="sprite"></div>
 
 <p>
     <button id="play">play</button>
@@ -20,14 +27,12 @@
     <button id="reverse">reverse</button>
 </p>
 <p>
-    <label>Frame: </label><input type="text" size="5" id="framenumber" value="0" /><button id="goToFrame">goToFrame</button>
-    <label>Tempo: </label><input type="text" size="5" id="tempo" value="1" /><button id="setTempo">setTempo</button>
+    <label>Frame: </label><input type="text" size="5" id="framenumber" value="0" /> <button id="goToFrame">goToFrame</button>
+    <label>Tempo: </label><input type="text" size="5" id="tempo" value="1" /> <button id="setTempo">setTempo</button>
 </p>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script type="text/javascript" src="javascript/jquery.sprite-animator.js"></script>
 <script>
-    
+
     var sprite = $('#sprite');
     var spriteAnimator = sprite.spriteAnimator({
         debug: true,
@@ -35,8 +40,10 @@
         left: 100,
         cols: 3,
         rows: 9
-    }).play('all', {run: -1, delay: 100});
-    
+    }).play({
+        script: 'all', run: -1, delay: 100
+    });
+
     $('button#play').on('click', function(event){
         event.preventDefault();
         sprite.trigger('play');
@@ -56,7 +63,7 @@
         event.preventDefault();
         sprite.trigger('nextFrame');
     });
-    
+
     $('button#previousFrame').on('click', function(event){
         event.preventDefault();
         sprite.trigger('previousFrame');
@@ -78,8 +85,8 @@
         var tempo = $('input#tempo').val() || 1;
         sprite.trigger('setTempo', tempo);
     });
-    
-    
+
+
 </script>
 
 </body>

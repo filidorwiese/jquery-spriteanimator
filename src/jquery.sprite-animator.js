@@ -1,19 +1,13 @@
 /*!
- * jQuery spriteAnimator (revision 2013/03/04)
+ * jQuery spriteAnimator
  * http://fili.nl
- * 
- * Copyright (c) Filidor Wiese, ONI
+ *
+ * Copyright (c) Filidor Wiese 2011
  * Licensed under LGPL 2.1 - http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-// TODO:
-//      - .tweenFromTo met easing
-//      - keep or remove triggers?
-//      - crossbrowser
-//      - previousFrame/nextFrame logging?
-
 (function($) {
-    
+
     /**
      * spriteAnimator
      * @element:
@@ -27,11 +21,11 @@
      *           - startSprite: number of the first sprite to show when done loading
      *           - onLoaded: callback that will be called when loading has finished
      */
-     
+
     $.spriteAnimator = function(element, options) {
-        
+
         var plugin = this;
-        
+
         var globalDefaults = {
             debug: false,
             url: null,
@@ -45,7 +39,7 @@
             startSprite: 1,
             onLoaded: null
         };
-        
+
         var animationDefaults = {
             play: true,
             delay: 50,
@@ -62,7 +56,7 @@
             onStop: null,
             onFrame: null
         };
-        
+
         plugin.internal = {
             loaded: false,
             totalSprites: 0,
@@ -72,19 +66,19 @@
             frameHeight: 0,
             animations: {}
         };
-        
+
         plugin.globals = {};
-        
+
         plugin.playhead = {};
-        
+
         var $element = $(element);
-        
+
         /**
          * Initializes the spriteAnimator
          */
         plugin.init = function() {
             plugin.globals = $.extend({}, globalDefaults, options);
-            
+
             if (options.cols === undefined) { throw 'spriteAnimator: cols not set'; }
             if (options.rows === undefined) { throw 'spriteAnimator: rows not set'; }
             if (options.url === undefined) {
@@ -96,10 +90,10 @@
                     plugin.globals.url = cssBackgroundImage.replace(/"/g,"").replace(/url\(|\)$/ig, "");
                 }
             }
-            
+
             _load();
         };
-        
+
         /**
          * Get the current frameNumber from script
          */
@@ -113,7 +107,7 @@
         plugin.currentSprite = function() {
             return plugin.playhead.currentSprite;
         };
-        
+
         /**
          * Go forward one frame in script
          */
@@ -150,24 +144,24 @@
             if (plugin.playhead.currentFrame == 0) {
                 plugin.playhead.run -= 1;
             }
-            
+
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
             _drawFrame(frame);
         };
         $element.off('previousFrame').on('previousFrame', function(){
             plugin.previousFrame();
         });
-        
+
         /**
          * Jump to certain frame within current animation sequence
          */
         plugin.goToFrame = function(frameNumber) {
             if (!plugin.internal.loaded) { return false; }
-            
+
             // Make sure given framenumber is within the animation
             var _baseNumber = Math.floor(frameNumber / plugin.playhead.script.length);
             frameNumber = Math.floor(frameNumber - (_baseNumber * plugin.playhead.script.length));
-            
+
             // Draw frame
             plugin.playhead.currentFrame = frameNumber;
             var frame = plugin.playhead.script[plugin.playhead.currentFrame];
@@ -179,7 +173,7 @@
         $element.off('goToFrame').on('goToFrame', function(event, param1){
             plugin.goToFrame(param1);
         });
-        
+
         /**
          * Show certain sprite (circumvents the current animation sequence)
          */
@@ -204,7 +198,7 @@
             // TODO: input type validatie
             plugin.internal.animations[name] = script;
         };
-        
+
         /**
          * Define a new animation sequence or resume if not playing
          * @animationObject:
@@ -241,7 +235,7 @@
                     _loop();
                 }
             }
-            
+
             // Enter the animation loop
             if (plugin.playhead.run !== 0) {
                 _loop();
@@ -251,14 +245,14 @@
             if (typeof plugin.playhead.onPlay == 'function') {
                 plugin.playhead.onPlay.call($element.data('spriteAnimator'));
             }
-            
+
             // Trigger: started
             //$element.trigger('started');
         };
         $element.off('play').on('play', function(event, param1, param2){
             plugin.play(param1, param2);
         });
-        
+
         /**
          * Reset playhead to first frame
          */
@@ -268,13 +262,13 @@
         $element.off('reset').on('reset', function(event){
             plugin.reset();
         });
-        
+
         /**
          * Stop the animation and reset the playhead
          */
         plugin.stop = function(requestFrameId) {
             plugin.playhead.play = false;
-            
+
             // onStop callback
             if (typeof plugin.playhead.onStop == 'function') {
                 plugin.playhead.onStop.call($element.data('spriteAnimator'));
@@ -286,7 +280,7 @@
         $element.off('stop').on('stop', function(event){
             plugin.stop();
         });
-        
+
         /**
          * Reverse direction of play
          */
@@ -306,7 +300,7 @@
         $element.off('setTempo').on('setTempo', function(event, param1){
             plugin.setTempo(param1);
         });
-        
+
         /**
          * Generate a linear script based on the spritesheet itself
          */
@@ -317,33 +311,33 @@
             }
             plugin.addScript('all', script);
         };
-        
+
         /**
          * Load the spritesheet and position it correctly
          */
         var _load = function() {
             var _preload = new Image();
             _preload.src = plugin.globals.url;
-            
+
             _isLoaded(_preload, function(){
                 if (plugin.internal.loaded) { return; } // <- Fix for some unexplained firefox bug that loads this twice.
                 plugin.internal.loaded = true;
 
                 _log('Loaded: ' + plugin.globals.url + ', sprites ' + plugin.globals.cols + ' x ' + plugin.globals.rows);
-                
+
                 plugin.internal.sheetWidth = _preload.width;
                 plugin.internal.sheetHeight = _preload.height;
                 plugin.internal.frameWidth = parseInt(plugin.internal.sheetWidth / plugin.globals.cols, 10);
                 plugin.internal.frameHeight = parseInt(plugin.internal.sheetHeight / plugin.globals.rows, 10);
                 plugin.internal.totalSprites = (plugin.globals.cols * plugin.globals.rows) - plugin.globals.cutOffFrames;
-                
+
                 if (plugin.internal.frameWidth % 1 > 0) {
                     throw 'spriteAnimator: frameWidth ' + plugin.internal.frameWidth + ' is not a whole number';
                 }
                 if (plugin.internal.frameHeight % 1 > 0) {
                     throw 'spriteAnimator: frameHeight ' + plugin.internal.frameHeight + ' is not a whole number';
                 }
-                
+
                 $element.css({
                     position: 'absolute',
                     width: plugin.internal.frameWidth,
@@ -351,7 +345,7 @@
                     backgroundImage: 'url('+plugin.globals.url+')',
                     backgroundPosition: '0 0'
                 });
-                
+
                 if (plugin.globals.top !== null) {
                     if (plugin.globals.top == 'center') {
                         $element.css({top: '50%', marginTop: plugin.internal.frameHeight / 2 * -1});
@@ -377,12 +371,12 @@
                 _autoScript();
                 animationObject = { script: plugin.internal.animations['all'] };
                 plugin.playhead = $.extend({}, animationDefaults, animationObject);
-                
+
                 // Starting sprite?
                 if (plugin.globals.startSprite > 1 && plugin.globals.startSprite <= plugin.internal.totalSprites) {
                     plugin.showSprite(plugin.globals.startSprite);
                 }
-                
+
                 // onLoaded callback
                 if (typeof plugin.globals.onLoaded == 'function') {
                     plugin.globals.onLoaded.call($element.data('spriteAnimator'));
@@ -399,18 +393,18 @@
         var _loop = function(time) {
             // Should be called as soon as possible
             var requestFrameId = window.requestAnimationFrame( _loop );
-            
+
             //console.log(requestFrameId);
-            
+
             // Wait until fully loaded
             if ($element !== null && plugin.internal.loaded) {
 
                 // Only play when not paused
                 if (plugin.playhead.play) {
-                    
+
                     // Throttle on nextDelay
                     if ((time - plugin.playhead.lastTime) >= plugin.playhead.nextDelay) {
-                        
+
                         // Render next frame only if element is visible and within viewport
                         if ($element.filter(':visible') && _inViewport($element)) {
 
@@ -418,7 +412,7 @@
                             if (plugin.playhead.run === 0) {
                                 plugin.stop();
                             } else {
-                                
+
                                 if (plugin.playhead.reversed) {
                                     plugin.previousFrame();
                                 } else {
@@ -429,18 +423,18 @@
                                 plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
                                 plugin.playhead.nextDelay /= plugin.playhead.tempo;
                                 plugin.playhead.lastTime = time;
-                                
+
                                 _log('frame: ' + plugin.playhead.currentFrame + ', sprite: ' + frame.sprite + ', delay: ' + plugin.playhead.nextDelay + ', run: ' + plugin.playhead.run);
                             }
-                            
+
                         } else {
                             if (plugin.playhead.outOfViewStop) {
                                 plugin.stop();
                             }
                         }
-                    
+
                     }
-                    
+
                 } else {
                     // Cancel animation loop if play = false
                     window.cancelAnimationFrame(requestFrameId);
@@ -454,34 +448,34 @@
         var _drawFrame = function( frame ) {
             if (frame.sprite === plugin.playhead.currentSprite) { return false; }
             plugin.playhead.currentSprite = frame.sprite;
-            
+
             var row = Math.ceil(frame.sprite / plugin.globals.cols);
             var col = frame.sprite - ((row - 1) * plugin.globals.cols);
             var bgX = ((col - 1) * plugin.internal.frameWidth) * -1;
             var bgY = ((row - 1) * plugin.internal.frameHeight) * -1;
-            
+
             if (row > plugin.globals.rows || col > plugin.globals.cols) {
                 throw 'spriteAnimator: position ' + frame.sprite + ' out of bound';
             }
-            
+
             // Animate background
             $element.css('background-position', bgX + 'px ' + bgY + 'px');
-            
+
             // Move if indicated
             if (frame.top != undefined) { $element.css('top', ($element.position().top + frame.top) + 'px'); }
             if (frame.bottom != undefined) { $element.css('bottom', ($element.position().bottom + frame.bottom) + 'px'); }
             if (frame.left != undefined) { $element.css('left', ($element.position().left + frame.left) + 'px'); }
             if (frame.right != undefined) { $element.css('right', ($element.position().right + frame.right) + 'px'); }
-            
+
             // onFrame callback
             if (typeof plugin.playhead.onFrame == 'function') {
                 plugin.playhead.onFrame.call($element.data('spriteAnimator'));
             }
-            
+
             // Trigger: frame
             //$element.trigger('frame');
         };
-        
+
         /**
          * Cross-browser test to make sure an image is loaded
          * Based on Paul Irish imagesLoaded plugin
@@ -490,11 +484,11 @@
             var elems = $(element).filter('img'),
             len   = elems.length,
             blank = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-            
+
             elems.on('load.imgloaded', function(){
-                if (--len <= 0 && this.src !== blank){ 
+                if (--len <= 0 && this.src !== blank){
                     elems.off('load.imgloaded');
-                    _callback.call(elems, this); 
+                    _callback.call(elems, this);
                 }
             }).each(function(){
                 // cached images don't fire load sometimes, so we reset src.
@@ -504,9 +498,9 @@
                     // data uri bypasses webkit log warning (thx doug jones)
                     this.src = blank;
                     this.src = src;
-                }  
+                }
             });
-            
+
             return this;
         };
 
@@ -529,7 +523,7 @@
                 console.log('spriteAnimator: ' + logline);
             }
         };
-        
+
         plugin.init();
 
     };
@@ -543,13 +537,13 @@
             if (undefined != $(this).data('spriteAnimator')) {
                 $(this).removeData('spriteAnimator');
             }
-            
+
             var plugin = new $.spriteAnimator(this, options);
-            
+
             $(this).data('spriteAnimator', plugin);
         }).data('spriteAnimator');
     };
-    
+
 })(jQuery);
 
 /**
@@ -563,18 +557,18 @@
         window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
         window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] || window[vendors[x]+'CancelRequestAnimationFrame'];
     }
- 
+
     if (!window.requestAnimationFrame) {
         window.requestAnimationFrame = function(callback, element) {
             var currTime = new Date().getTime();
             var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-            var id = window.setTimeout(function() { callback(currTime + timeToCall); }, 
+            var id = window.setTimeout(function() { callback(currTime + timeToCall); },
               timeToCall);
             lastTime = currTime + timeToCall;
             return id;
         };
     }
- 
+
     if (!window.cancelAnimationFrame) {
         window.cancelAnimationFrame = function(id) {
             clearTimeout(id);

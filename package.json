@@ -1,0 +1,27 @@
+{
+  "name": "jquery-spriteanimator",
+  "version": "1.0.0",
+  "description": "Create sprite animations with this jQuery plugin",
+  "main": "jquery.sprite-animator.js",
+  "dependencies": {},
+  "devDependencies": {
+    "jquery": "^2.2.2",
+    "uglify-js": "^2.6.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "./node_modules/uglify-js/bin/uglifyjs src/jquery.sprite-animator.js > ./dist/jquery.sprite-animator.min.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/filiw/jquery-spriteanimator-plugin.git"
+  },
+  "keywords": [
+    "jquery",
+    "sprite",
+    "animation"
+  ],
+  "author": "Filidor Wiese",
+  "license": "CC-BY-NC-4.0",
+  "homepage": "https://bitbucket.org/filiw/jquery-spriteanimator-plugin#readme"
+}

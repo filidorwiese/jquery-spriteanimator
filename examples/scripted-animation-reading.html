@@ -1,15 +1,19 @@
 <!DOCTYPE html>
-<html class="nl" lang="nl" dir="ltr">
+<html dir="ltr">
 <head>
-<meta charset="UTF-8" />
-<style>
-
-</style>
+    <meta charset="UTF-8" />
+    <script type="text/javascript" src="../node_modules/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript" src="../dist/jquery.sprite-animator.min.js"></script>
+    <style>
+        #sprite {
+            background-image:url(sprites/reading.png);
+        }
+    </style>
 </head>
 
 <body>
 
-<div id="sprite" style="background-image:url(sprites/pxlfili_lezen_S.png)"></div>
+<div id="sprite"></div>
 
 <p>
     <button id="play">play</button>
@@ -20,12 +24,10 @@
     <button id="reverse">reverse</button>
 </p>
 <p>
-    <label>Frame: </label><input type="text" size="5" id="framenumber" value="0" /><button id="goToFrame">goToFrame</button>
-    <label>Tempo: </label><input type="text" size="5" id="tempo" value="1" /><button id="setTempo">setTempo</button>
+    <label>Frame: </label><input type="text" size="5" id="framenumber" value="0" /> <button id="goToFrame">goToFrame</button>
+    <label>Tempo: </label><input type="text" size="5" id="tempo" value="1" /> <button id="setTempo">setTempo</button>
 </p>
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script type="text/javascript" src="javascript/jquery.sprite-animator.js"></script>
 <script>
     var sprite = $('#sprite');
     var spriteAnimator = sprite.spriteAnimator({
@@ -36,7 +38,7 @@
         rows: 3
     });
     spriteAnimator.addScript('lezen', [
-        {sprite: 1, delay: 8000}, // regels lezen
+        {sprite: 1, delay: 1000}, // regels lezen
         {sprite: 2, delay: 800},
         {sprite: 1},
         {sprite: 3, delay: 400},
@@ -51,7 +53,7 @@
         {sprite: 1}, // ogen knipperen
         {sprite: 4},
         {sprite: 1},
-        
+
         {sprite: 5}, // bladzijde omslaan
         {sprite: 6},
         {sprite: 7},
@@ -62,17 +64,10 @@
         {sprite: 12}
     ]);
 
-    spriteAnimator.play({run: 1, delay: 200, script: 'lezen'});
-    //spriteAnimator.play({run: -1, delay: 200, script: 'all'});
-    /*
-    sprite.trigger('play', {
-        run: -1,
-        delay: 200,
-        script: 'lezen',
-        onStop: function(){ console.log('stopped'); }
+    spriteAnimator.play({
+        run: 1, delay: 200, script: 'lezen'
     });
-    */
-    
+
     $('button#play').on('click', function(event){
         event.preventDefault();
         spriteAnimator.play();
@@ -92,7 +87,7 @@
         event.preventDefault();
         sprite.trigger('nextFrame');
     });
-    
+
     $('button#previousFrame').on('click', function(event){
         event.preventDefault();
         spriteAnimator.previousFrame();
@@ -114,7 +109,7 @@
         var tempo = $('input#tempo').val() || 1;
         spriteAnimator.setTempo(tempo);
     });
-    
+
 </script>
 
 </body>
