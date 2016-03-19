@@ -24,5 +24,6 @@
     "animation"
   ],
   "author": "Filidor Wiese",
-  "license": "CC-BY-NC-4.0"
+  "license": "CC-BY-NC-4.0",
+  "homepage": "https://github.com/filidorwiese/jquery-spriteanimator"
 }
