@@ -220,11 +220,11 @@
                 return false;
             }
 
-            if (typeof animationObject == 'object') {
-                if (typeof animationObject.script == 'string') { // Resolve to stored animation sequence
+            if (typeof animationObject === 'object') {
+                if (typeof animationObject.script === 'string') { // Resolve to stored animation sequence
                     animationObject.script = plugin.internal.animations[animationObject.script];
                 }
-                if (typeof animationObject.script == 'undefined') {
+                if (typeof animationObject.script === 'undefined') {
                     animationObject.script = plugin.internal.animations['all'];
                 }
                 plugin.playhead = $.extend({}, animationDefaults, animationObject);
@@ -242,7 +242,7 @@
             }
 
             // onPlay callback
-            if (typeof plugin.playhead.onPlay == 'function') {
+            if (typeof plugin.playhead.onPlay === 'function') {
                 plugin.playhead.onPlay.call($element.data('spriteAnimator'));
             }
 
@@ -266,11 +266,11 @@
         /**
          * Stop the animation and reset the playhead
          */
-        plugin.stop = function(requestFrameId) {
+        plugin.stop = function() {
             plugin.playhead.play = false;
 
             // onStop callback
-            if (typeof plugin.playhead.onStop == 'function') {
+            if (typeof plugin.playhead.onStop === 'function') {
                 plugin.playhead.onStop.call($element.data('spriteAnimator'));
             }
 
@@ -347,7 +347,7 @@
                 });
 
                 if (plugin.globals.top !== null) {
-                    if (plugin.globals.top == 'center') {
+                    if (plugin.globals.top === 'center') {
                         $element.css({top: '50%', marginTop: plugin.internal.frameHeight / 2 * -1});
                     } else {
                         $element.css({top: plugin.globals.top});
@@ -360,7 +360,7 @@
                     $element.css({bottom: plugin.globals.bottom});
                 }
                 if (plugin.globals.left !== null) {
-                    if (plugin.globals.left == 'center') {
+                    if (plugin.globals.left === 'center') {
                         $element.css({left: '50%', marginLeft: plugin.internal.frameWidth / 2 * -1});
                     } else {
                         $element.css({left: plugin.globals.left});
@@ -378,7 +378,7 @@
                 }
 
                 // onLoaded callback
-                if (typeof plugin.globals.onLoaded == 'function') {
+                if (typeof plugin.globals.onLoaded === 'function') {
                     plugin.globals.onLoaded.call($element.data('spriteAnimator'));
                 }
 
@@ -468,7 +468,7 @@
             if (frame.right != undefined) { $element.css('right', ($element.position().right + frame.right) + 'px'); }
 
             // onFrame callback
-            if (typeof plugin.playhead.onFrame == 'function') {
+            if (typeof plugin.playhead.onFrame === 'function') {
                 plugin.playhead.onFrame.call($element.data('spriteAnimator'));
             }
 
