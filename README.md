@@ -37,7 +37,7 @@ Finally call .play() on it with some optional parameters.
 When attaching the spriteAnimator plugin you can define the following options
 
 Property | Required | Default&nbsp;value | Explanation
-------------- |:-------------:| :-------------:| -------------
+:------------- |:-------------:| :-------------:| :-------------
 `debug` | no | false | Show debug logging in console
 `url` | no | null | url to spriteSheet, if not set the css background-image will be used
 `cols` | yes | null | Number of columns in the spritesheet
@@ -55,7 +55,7 @@ Add a named animation sequence. The `script` parameter should be an array consis
 
 
 Property | Required | Default&nbsp;value | Explanation
-------------- |:-------------:| :-------------:| -------------
+:------------- |:-------------:| :-------------:| :-------------
 `sprite` | yes |  | Which sprite number to show
 `delay` | no | global delay time | Time in ms to wait after this frame has been rendered 
 `top` `bottom` `left` `right` | no | 0 | Move the position of the placeholder to any direction after frame has been rendered
@@ -74,7 +74,7 @@ spriteAnim.addScript('paw', [
 Plays a named animation sequence or resume if not playing. If no options object is given, it resumes the current animation script or starts playing all frames.
 
 Property | Required | Default&nbsp;value | Explanation
-------------- |:-------------:| :-------------:| -------------
+:------------- |:-------------:| :-------------:| :-------------
 `play` | no | true | Start playing the animation right away
 `run` | no | 1 | The number of times the animation should run, -1 = infinite
 `delay` | no | 50 | Default delay for all frames that don't have a delay set
