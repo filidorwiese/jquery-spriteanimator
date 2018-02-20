@@ -2,7 +2,7 @@
   "name": "jquery-spriteanimator",
   "version": "1.0.7",
   "description": "Create fancy sprite animations with this jQuery plugin",
-  "main": "jquery.sprite-animator.js",
+  "main": "dist/jquery.sprite-animator.min.js",
   "dependencies": {},
   "devDependencies": {
     "jquery": "^3.3.1",

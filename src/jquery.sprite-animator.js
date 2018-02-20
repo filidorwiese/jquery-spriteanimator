@@ -23,7 +23,6 @@
      */
 
     $.spriteAnimator = function(element, options) {
-
         var plugin = this;
 
         var globalDefaults = {
@@ -84,7 +83,7 @@
             if (options.url === undefined) {
                 // If no sprite is specified try to use background-image
                 var cssBackgroundImage = $element.css("background-image");
-                if (cssBackgroundImage == 'none') {
+                if (cssBackgroundImage === 'none') {
                     throw 'spriteAnimator: no spritesheet found';
                 } else {
                     plugin.globals.url = cssBackgroundImage.replace(/"/g,"").replace(/url\(|\)$/ig, "");
@@ -119,7 +118,7 @@
             if (plugin.playhead.currentFrame > (plugin.playhead.script.length - 1)) {
                 plugin.playhead.currentFrame = 0;
             }
-            if (plugin.playhead.currentFrame == plugin.playhead.script.length - 1) {
+            if (plugin.playhead.currentFrame === plugin.playhead.script.length - 1) {
                 plugin.playhead.run -= 1;
             }
 
@@ -141,7 +140,7 @@
             if (plugin.playhead.currentFrame < 0) {
                 plugin.playhead.currentFrame = (plugin.playhead.script.length - 1);
             }
-            if (plugin.playhead.currentFrame == 0) {
+            if (plugin.playhead.currentFrame === 0) {
                 plugin.playhead.run -= 1;
             }
 
@@ -420,7 +419,7 @@
                                 }
 
                                 var frame = plugin.playhead.script[plugin.playhead.currentFrame];
-                                plugin.playhead.nextDelay = (frame.delay != undefined ? frame.delay : plugin.playhead.delay);
+                                plugin.playhead.nextDelay = (frame.delay ? frame.delay : plugin.playhead.delay);
                                 plugin.playhead.nextDelay /= plugin.playhead.tempo;
                                 plugin.playhead.lastTime = time;
 
@@ -462,10 +461,10 @@
             $element.css('background-position', bgX + 'px ' + bgY + 'px');
 
             // Move if indicated
-            if (frame.top != undefined) { $element.css('top', ($element.position().top + frame.top) + 'px'); }
-            if (frame.bottom != undefined) { $element.css('bottom', ($element.position().bottom + frame.bottom) + 'px'); }
-            if (frame.left != undefined) { $element.css('left', ($element.position().left + frame.left) + 'px'); }
-            if (frame.right != undefined) { $element.css('right', ($element.position().right + frame.right) + 'px'); }
+            if (frame.top) { $element.css('top', ($element.position().top + frame.top) + 'px'); }
+            if (frame.bottom) { $element.css('bottom', ($element.position().bottom + frame.bottom) + 'px'); }
+            if (frame.left) { $element.css('left', ($element.position().left + frame.left) + 'px'); }
+            if (frame.right) { $element.css('right', ($element.position().right + frame.right) + 'px'); }
 
             // onFrame callback
             if (typeof plugin.playhead.onFrame === 'function') {
@@ -534,7 +533,7 @@
      */
     $.fn.spriteAnimator = function(options) {
         return this.each(function() {
-            if (undefined != $(this).data('spriteAnimator')) {
+            if ($(this).data('spriteAnimator')) {
                 $(this).removeData('spriteAnimator');
             }
 
