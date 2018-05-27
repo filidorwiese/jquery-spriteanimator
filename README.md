@@ -1,4 +1,7 @@
+
 # Jquery spriteAnimator plugin
+
+:sparkles: *Note: a newer non-jquery version can be found at https://github.com/filidorwiese/spriteling* :sparkles:
 
 Create fancy sprite animations with this jQuery plugin
 
